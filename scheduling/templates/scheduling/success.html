@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+{% block title %}Booking Confirmed{% endblock %}
+
+{% block content %}
+<div class="text-center py-5">
+    <h1 class="display-4 text-success">✓ Spot Confirmed!</h1>
+    <p class="lead">You are all set for <strong>{{ wellness_class.title }}</strong>.</p>
+
+    <div class="mt-4">
+        <a href="{% url 'dashboard' %}" class="btn btn-primary">Go to My Dashboard</a>
+        <a href="{% url 'class_list' %}" class="btn btn-outline-secondary">Book Another Session</a>
+    </div>
+</div>
+{% endblock %}

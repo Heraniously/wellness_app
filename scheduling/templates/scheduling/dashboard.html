@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+{% block content %}
+<h3 class="mb-4">My Upcoming Sessions</h3>
+<div class="row">
+    {% for booking in upcoming %}
+    <div class="col-md-6 mb-4">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-body d-flex flex-column">
+                <h5 class="card-title text-primary">{{ booking.wellness_class.title }}</h5>
+                <p class="mb-1"><strong>Instructor:</strong> {{ booking.wellness_class.instructor.get_full_name|default:booking.wellness_class.instructor.username }}</p>
+                <p class="mb-1"><strong>Time:</strong> {{ booking.wellness_class.start_time|date:"D, M d @ H:i" }}</p>
+                <p><span class="badge {% if booking.is_paid %}bg-success{% else %}bg-info{% endif %}">{{ booking.get_payment_type_display }}</span></p>
+
+                <div class="mt-auto pt-3">
+                    {% if booking.wellness_class.start_time > now_plus_24h %}
+                        <form action="{% url 'cancel_booking' booking.id %}" method="post">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-outline-danger btn-sm w-100"
+                                    onclick="return confirm('Are you sure you want to cancel this booking?')">
+                                Cancel Booking
+                            </button>
+                        </form>
+                    {% else %}
+                        <div class="alert alert-warning py-1 px-2 mb-0 small text-center">
+                            Cancellatio n locked (starts in < 24h)
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <p class="text-muted">You have no upcoming sessions.</p>
+    {% endfor %}
+</div>
+
+
+<hr class="my-5">
+<h4 class="text-muted">My Class History</h4>
+<div class="row">
+    {% for booking in past %}
+    <div class="col-md-4 mb-3">
+        <div class="card bg-light border-0 opacity-75">
+            <div class="card-body py-2">
+                <p class="mb-0 small"><strong>{{ booking.wellness_class.title }}</strong></p>
+                <p class="mb-0 x-small">{{ booking.wellness_class.start_time|date:"M d, Y" }}</p>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

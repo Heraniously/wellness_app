@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container-fluid p-0" >
+    <a href="{% url 'class_list' %}" class="text-decoration-none">
+        <div class="zen-hero-container">
+            <div class="zen-hero-image" style="background-image: url('{% static 'image/main-image.jpg' %}');">
+            </div>
+            <div class="video-overlay"></div>
+            <div class="video-content text-center">
+                <h1 class="display-2 fw-bold mb-3 fade-in">Let's have Zen time together</h1>
+                <p class="lead fs-3 mb-5 fade-in">Experience mindfulness with Iulia and Melanie.</p>
+                <span class="btn btn-primary btn-lg px-5 py-3 rounded-pill shadow fade-in">See Courses</span>
+            </div>
+        </div>
+    </a>
+</div>
+{% endblock %}

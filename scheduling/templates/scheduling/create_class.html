@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+{% block title %}Create New Wellness Class{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-sm border-0">
+                <div class="card-body p-5">
+                    <h2 class="fw-bold text-center mb-4" style="color: #6d8b74;">Create New Session</h2>
+
+                    <form method="POST">
+                        {% csrf_token %}
+
+                        <div class="mb-3">
+                            <label for="title" class="form-label fw-bold">Class Title</label>
+                            <input type="text" name="title" id="title" class="form-control" placeholder="e.g., Morning Hatha Yoga" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="description" class="form-label fw-bold">Description</label>
+                            <textarea name="description" id="description" class="form-control" rows="3" placeholder="Describe the session flow..." required></textarea>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="start_time" class="form-label fw-bold">Start Time</label>
+                                <input type="datetime-local" name="start_time" id="start_time" class="form-control" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="end_time" class="form-label fw-bold">End Time</label>
+                                <input type="datetime-local" name="end_time" id="end_time" class="form-control" required>
+                            </div>
+
+                            <div class="form-check mb-4 p-3 border rounded bg-light">
+                                <input class="form-check-input ms-0 me-2" type="checkbox" name="is_recurring" id="is_recurring">
+                                <label class="form-check-label fw-bold" for="is_recurring">
+                                    Recurring Class? (Create 4 sessions, one per week)
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="price" class="form-label fw-bold">Price ($)</label>
+                                <input type="number" step="0.01" name="price" id="price" class="form-control" placeholder="25.00" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="capacity" class="form-label fw-bold">Max Capacity</label>
+                                <input type="number" name="capacity" id="capacity" class="form-control" placeholder="15" required>
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2 mt-4">
+                            <button type="submit" class="btn btn-lg text-white" style="background-color: #6d8b74;">
+                                Launch Wellness Class
+                            </button>
+                            <a href="{% url 'class_list' %}" class="btn btn-link text-muted">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

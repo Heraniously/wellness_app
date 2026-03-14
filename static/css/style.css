@@ -1,0 +1,256 @@
+/* Import Zen Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans:wght@300;400;600&family=Montserrat:wght@400;700&display=swap');
+
+:root {
+    --zen-beige: #F5F5DC;      /* Warm Beige Background */
+    --zen-sage: #87A96B;       /* Calm Sage Green */
+    --zen-charcoal: #36454F;   /* Soft Charcoal for text */
+    --zen-cream: #FFFDD0;      /* Lighter Cream for cards */
+    --zen-terracotta: #C27E79; /* Warm Earthy Red for 'Danger/Cancel' */
+}
+
+/* Global Styles */
+body {
+    background-color: var(--zen-beige) !important;
+    padding: 90px 20px 50px 20px; /* This creates the 'margin' below the fixed navbar */
+    color: var(--zen-charcoal) !important;
+    font-family: 'Noto Sans', sans-serif;
+}
+
+h1, h2, h3, h4, h5 {
+    font-family: 'Montserrat', sans-serif;
+    color: var(--zen-charcoal);
+}
+
+/* Navbar Fix: Force dark text on light background */
+.navbar {
+    background-color: var(--zen-cream) !important;
+    border-bottom: 1px solid rgba(0,0,0,0.05);
+    padding: 15px 20px;
+}
+.navbar-nav{
+    gap: 20px;
+    padding: 50px 20px;
+}
+
+.navbar-brand, .nav-link {
+    color: var(--zen-charcoal) !important;
+    font-weight: 600 !important;
+    padding: 0px;
+}
+
+.nav-link {
+    border-radius: 12px;
+    padding: 08px 30px;
+    transition: color 0.3s ease;
+}
+
+.nav-link:hover {
+    background-color: var(--zen-sage);
+    color: var(--zen-beige) !important;
+}
+
+/* Sage Green Primary Buttons (Replacing Blue) */
+.btn-primary {
+    background-color: var(--zen-sage) !important;
+    border: none !important;
+    color: white !important;
+    padding: 10px 24px;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+    background-color: #6D8B56 !important;
+    transform: translateY(-2px);
+}
+
+/* Terracotta Danger Buttons (Replacing Bright Red) */
+.btn-outline-danger, .btn-danger {
+    color: var(--zen-terracotta) !important;
+    border-color: var(--zen-terracotta) !important;
+}
+
+.btn-danger {
+    background-color: var(--zen-terracotta) !important;
+    color: white !important;
+}
+
+/* Warm Zen Cards */
+.card {
+    background-color: var(--zen-white) !important;
+    border: none !important;
+    border-radius: 20px !important;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.04) !important;
+}
+
+.text-success {
+    color: var(--zen-sage) !important;
+}
+
+.text-danger {
+    color: #a35d5d !important; /* Muted red for Admin to stay Zen */
+}
+
+.container{
+    padding: 0px;
+    }
+
+/* Container that holds everything */
+.video-background-container {
+    position: relative;
+    width: 100%;
+    height: 85vh; /* Covers most of the screen */
+    overflow: hidden;
+    border-radius: 30px; /* Soft Zen edges */
+    background-color: var(--zen-beige); /* Fallback color */
+}
+
+/* The Video itself: Hidden from clicks and scaled to fill */
+.video-foreground {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 100vw;
+    height: 100vh;
+    transform: translate(-50%, -50%);
+    pointer-events: none; /* User can't click 'Pause' on the background */
+}
+
+@media (min-aspect-ratio: 16/9) {
+  .video-foreground { height: 56.25vw; }
+}
+@media (max-aspect-ratio: 16/9) {
+  .video-foreground { width: 177.78vh; }
+}
+
+/* The Overlay: Crucial for making your text pop against the moving video */
+.video-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(245, 245, 220, 0.4); /* 40% Beige Tint */
+    z-index: 1;
+}
+
+/* Text Content Positioning */
+.video-content {
+    position: relative;
+    z-index: 2;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    color: var(--zen-charcoal);
+}
+
+.video-foreground {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* This makes it fill the screen like a background */
+    z-index: 0;
+}
+
+/* Gentle Fade-in Animation */
+.fade-in {
+    animation: fadeInIntro 2.5s ease forwards;
+    opacity: 0;
+}
+
+@keyframes fadeInIntro {
+    from { opacity: 0; transform: translateY(15px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* --- UPDATED HERO SECTION FOR IMAGES --- */
+
+/* Parent Container */
+.zen-hero-container {
+    position: relative;
+    width: 100%;
+    height: calc(100vh - 75px); /* Full height minus navbar height */
+    overflow: hidden;
+    background-color: var(--zen-beige); /* Fallback color stays underneath */
+    cursor: pointer;
+}
+
+/* The Image Layer */
+.zen-hero-image {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-size: cover; /* Ensures image fills the area */
+    background-position: center;
+    background-repeat: no-repeat;
+    z-index: 0; /* Behind everything */
+    transition: transform 0.8s ease;
+}
+
+
+/* Overlay Layer */
+.video-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(245, 245, 220, 0.4); /* 40% Warm Tint */
+    z-index: 1; /* Above image, below text */
+}
+
+/* Content Layer */
+.video-content {
+    position: relative;
+    z-index: 2; /* On top of everything */
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    color: var(--zen-charcoal);
+}
+
+#no-padding {
+    padding: 0 !important;
+}
+/* Styling for Form Inputs to match Zen theme */
+.form-control, .form-select {
+    background-color: var(--zen-beige) !important;
+    border-color: rgba(135, 169, 107, 0.3) !important; /* Muted sage border */
+    border-radius: 12px !important;
+    padding: 12px;
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: var(--zen-sage) !important;
+    box-shadow: 0 0 0 0.25rem rgba(135, 169, 107, 0.1) !important;
+}
+
+.booking-info h4 {
+    color: var(--zen-sage);
+}
+
+.revolut-section {
+    background-color: #f9faf7 !important; /* Slightly whiter than beige to stand out */
+    border-color: var(--zen-sage) !important;
+    animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Ensure headings in booking cards are charcoal */
+.card h2 {
+    color: var(--zen-charcoal);
+    font-weight: 700;
+}

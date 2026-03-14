@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container py-5">
+    <h2 class="mb-4">Instructor Dashboard: {{ user.get_full_name }}</h2>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <a href="{% url 'create_class' %}" class="btn btn-success">
+            <i class="bi bi-plus-circle"></i> Create New Class
+        </a>
+    </div>
+
+    <div class="list-group">
+    {% for class in classes %}
+        <div class="list-group-item shadow-sm mb-3 border-0 rounded">
+            <div class="d-flex w-100 justify-content-between align-items-center">
+                <h5 class="mb-1 text-primary">{{ class.title }}</h5>
+                <small class="text-muted">{{ class.start_time|date:"D, M d @ H:i" }}</small>
+            </div>
+            <p class="mb-2"><strong>Participants:</strong> {{ class.booking_set.count }} / {{ class.capacity }}</p>
+            <table class="table table-sm table-hover">
+                <thead class="table-light">
+                    <tr><th>Client Name</th><th>Payment Status</th></tr>
+                </thead>
+                <tbody>
+                    {% for booking in class.booking_set.all %}
+                    <tr>
+                        <td>{{ booking.client.get_full_name|default:booking.client.username }}</td>
+                        <td><span class="badge {% if booking.is_paid %}bg-success{% else %}bg-warning text-dark{% endif %}">
+                            {{ booking.get_payment_type_display }}
+                        </span></td>
+                        <td>
+                            <div class="d-flex align-items-center justify-content-between">
+                                {% if booking.is_paid %}
+                                    <span class="badge bg-success">Paid</span>
+                                    <form action="{% url 'toggle_payment_status' booking.id %}" method="post" class="ms-2">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-sm btn-link text-danger p-0" style="font-size: 0.75rem; text-decoration: none;">
+                                            (Undo)
+                                        </button>
+                                    </form>
+                                {% else %}
+                                    <span class="badge bg-warning text-dark">Pending</span>
+                                    <form action="{% url 'toggle_payment_status' booking.id %}" method="post" class="ms-2">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-sm btn-success py-0" style="font-size: 0.75rem;">
+                                            Confirm $
+                                        </button>
+                                    </form>
+                                {% endif %}
+                            </div>
+                            {% if booking.payment_proof %}
+                                <div class="x-small text-muted mt-1">Ref: {{ booking.payment_proof }}</div>
+                            {% endif %}
+                        </td>
+
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="2" class="text-muted small">No bookings yet.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% endfor %}
+    </div>
+</div>
+{% endblock %}

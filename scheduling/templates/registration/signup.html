@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+{% block title %}Create Account{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-5">
+        <div class="card shadow-sm border-0 p-4">
+            <h3 class="text-center mb-4">Join Wellness Hub</h3>
+            <form method="post">
+                {% csrf_token %}
+                {% for field in form %}
+                    <div class="mb-3">
+                        <label class="form-label">{{ field.label }}</label>
+                        {{ field }}
+                        {% if field.help_text %}
+                            <small class="form-text text-muted d-block">{{ field.help_text }}</small>
+                        {% endif %}
+                        {% for error in field.errors %}
+                            <div class="text-danger small">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                {% endfor %}
+                <button type="submit" class="btn btn-success w-100 py-2">Create My Account</button>
+            </form>
+            <div class="text-center mt-3">
+                <p class="small text-muted">Already have an account? <a href="{% url 'login' %}">Log In</a></p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    input { display: block; width: 100%; padding: .375rem .75rem; font-size: 1rem; border: 1px solid #ced4da; border-radius: .375rem; }
+</style>
+{% endblock %}
