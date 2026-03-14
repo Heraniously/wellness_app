@@ -1,5 +1,8 @@
 from pathlib import Path
+from dotenv import load_dotenv
 import os
+load_dotenv()
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -26,7 +29,7 @@ STATIC_URL = 'static/'
 STATIC_ROOT = '/home/Heraniously/mobile_web_dev/thesis/wellness_app/static'
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-0k)ee$-8!e(ex3c^s!tuc&bozx+y^x21#(_ddcn5n*yis3mu_z'
+SECRET_KEY = os.getenv('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -95,11 +98,11 @@ else:
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.mysql',
-            'NAME': 'wellness_db',
-            'USER': 'wellness_user',
-            'PASSWORD': 'well_pass123',
-            'HOST': '127.0.0.1',
-            'PORT': '3306',
+            'NAME': os.getenv('DB_NAME'),
+            'USER': os.getenv('DB_USER'),
+            'PASSWORD': os.getenv('DB_PASSWORD'),
+            'HOST': os.getenv('DB_HOST'),
+            'PORT': os.getenv('DB_PORT'),
         }
     }
     STATIC_ROOT = BASE_DIR / 'staticfiles'
