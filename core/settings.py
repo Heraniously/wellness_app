@@ -10,7 +10,7 @@ SECRET_KEY = os.getenv('SECRET_KEY')
 DEBUG = os.getenv('DEBUG', 'False') == 'True'
 
 ALLOWED_HOSTS = [
-    '*',
+    'wellnessapp-production-34b8.up.railway.app',
     '127.0.0.1',
     'localhost',
 ]
