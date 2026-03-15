@@ -1,4 +1,5 @@
-#We need to create a "view" that handles the logic of what happens when a user clicks that button.
+# We need to create a "view" that handles the logic of what happens when a user clicks that button.
+from urllib import request
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib.admin.views.decorators import staff_member_required
@@ -7,12 +8,15 @@ from django.contrib.auth.forms import UserCreationForm
 from django.urls import reverse_lazy
 from django.views import generic
 from django.utils import timezone
+from zoneinfo import ZoneInfo
 from datetime import timedelta, datetime
 from django.contrib import messages
 from django import forms
 from django.contrib.auth.models import User, Group
 from .forms import ProfessionalSignUpForm
 from decimal import Decimal
+BUCHAREST = ZoneInfo('Europe/Bucharest')
+
 
 class SignUpView(generic.CreateView):
     form_class = ProfessionalSignUpForm
@@ -29,7 +33,8 @@ class SignUpView(generic.CreateView):
         # 3. If they checked the 'instructor' box, add extra powers
         if form.cleaned_data.get('is_instructor'):
             # Assign them to the Instructors group
-            instructor_group, created = Group.objects.get_or_create(name='Instructor')
+            instructor_group, created = Group.objects.get_or_create(
+                name='Instructor')
             user.groups.add(instructor_group)
 
             # Give them 'Staff status' so they can log into the dashboard
@@ -38,12 +43,15 @@ class SignUpView(generic.CreateView):
 
         return super().form_valid(form)
 
+
 def home(request):
     return render(request, 'scheduling/home.html')
 
+
 def class_list(request):
     # This gets all classes to show to the clients
-    classes = WellnessClass.objects.filter(start_time__gt=timezone.now()).order_by('start_time')
+    classes = WellnessClass.objects.filter(
+        start_time__gt=timezone.now()).order_by('start_time')
 
     # Logic to identify full classes
     for c in classes:
@@ -54,12 +62,14 @@ def class_list(request):
     # If user is logged in, get their booked class IDs to prevent double booking
     user_booked_ids = []
     if request.user.is_authenticated:
-        user_booked_ids = request.user.booking_set.values_list('wellness_class_id', flat=True)
+        user_booked_ids = request.user.booking_set.values_list(
+            'wellness_class_id', flat=True)
 
     return render(request, 'scheduling/class_list.html', {
         'classes': classes,
         'user_booked_ids': user_booked_ids
     })
+
 
 @login_required
 def book_session(request, class_id):
@@ -76,18 +86,22 @@ def book_session(request, class_id):
     # 3. Send them back to the class list
     return redirect('class_list')
 
+
 @login_required
 def client_dashboard(request):
     now = timezone.now()
     # Split classes into Upcoming and Past
-    upcoming = Booking.objects.filter(client=request.user, wellness_class__start_time__gt=now).order_by('wellness_class__start_time')
-    past = Booking.objects.filter(client=request.user, wellness_class__start_time__lte=now)
+    upcoming = Booking.objects.filter(
+        client=request.user, wellness_class__start_time__gt=now).order_by('wellness_class__start_time')
+    past = Booking.objects.filter(
+        client=request.user, wellness_class__start_time__lte=now)
 
     return render(request, 'scheduling/dashboard.html', {
         'upcoming': upcoming,
         'past': past,
         'now_plus_24h': now + timedelta(hours=24)
     })
+
 
 @login_required
 def finalize_booking(request, class_id):
@@ -124,7 +138,8 @@ def finalize_booking(request, class_id):
             is_paid=False
         )
         return render(request, 'scheduling/success.html', {
-            'wellness_class': wellness_class  # We pass 'class' to match your template's {{ class.title }}
+            # We pass 'class' to match your template's {{ class.title }}
+            'wellness_class': wellness_class
         })
 
     # Calculate discount for display in the GET request
@@ -135,6 +150,7 @@ def finalize_booking(request, class_id):
         'discount_price': discount_price
     })
 
+
 @login_required
 def cancel_booking(request, booking_id):
     booking = get_object_or_404(Booking, id=booking_id, client=request.user)
@@ -144,8 +160,10 @@ def cancel_booking(request, booking_id):
         booking.delete()
         messages.success(request, "Cancellation successful.")
     else:
-        messages.error(request, "Cancellation denied: Less than 24h until class.")
+        messages.error(
+            request, "Cancellation denied: Less than 24h until class.")
     return redirect('dashboard')
+
 
 @login_required
 def instructor_attendance(request):
@@ -154,8 +172,10 @@ def instructor_attendance(request):
         return redirect('class_list')
 
     # Get classes and their students
-    upcoming_classes = WellnessClass.objects.filter(start_time__gte=timezone.now())
+    upcoming_classes = WellnessClass.objects.filter(
+        start_time__gte=timezone.now())
     return render(request, 'scheduling/instructor_view.html', {'classes': upcoming_classes})
+
 
 @login_required
 def instructor_dashboard(request):
@@ -171,6 +191,7 @@ def instructor_dashboard(request):
 
     return render(request, 'scheduling/instructor_dashboard.html', {'classes': my_classes})
 
+
 @login_required
 def instructor_overview(request):
     # Only allow staff members (Instructors/Admins) to see this page
@@ -178,11 +199,13 @@ def instructor_overview(request):
         return redirect('class_list')
 
     # Get all upcoming classes to show attendance
-    upcoming_classes = WellnessClass.objects.filter(start_time__gte=timezone.now()).order_by('start_time')
+    upcoming_classes = WellnessClass.objects.filter(
+        start_time__gte=timezone.now()).order_by('start_time')
 
     return render(request, 'scheduling/instructor_overview.html', {
         'classes': upcoming_classes
     })
+
 
 @login_required
 def toggle_payment_status(request, booking_id):
@@ -200,14 +223,17 @@ def toggle_payment_status(request, booking_id):
     messages.info(request, f"Payment for {booking.client.username} {status}.")
     return redirect('instructor_dashboard')
 
+
 class ExtendedSignUpForm(UserCreationForm):
     first_name = forms.CharField(max_length=30, required=True)
     last_name = forms.CharField(max_length=30, required=True)
     email = forms.EmailField(required=True)
-    role = forms.ChoiceField(choices=[('client', 'Practitioner'), ('instructor', 'Teacher')])
+    role = forms.ChoiceField(
+        choices=[('client', 'Practitioner'), ('instructor', 'Teacher')])
 
     class Meta(UserCreationForm.Meta):
-        fields = UserCreationForm.Meta.fields + ('first_name', 'last_name', 'email')
+        fields = UserCreationForm.Meta.fields + \
+            ('first_name', 'last_name', 'email')
 
     def save(self, commit=True):
         user = super().save(commit=False)
@@ -221,7 +247,7 @@ class ExtendedSignUpForm(UserCreationForm):
             group, created = Group.objects.get_or_create(name=group_name)
             user.groups.add(group)
             if self.cleaned_data['role'] == 'instructor':
-                user.is_staff = True # Give them staff status for instructor views
+                user.is_staff = True  # Give them staff status for instructor views
                 user.save()
         return user
 
@@ -229,12 +255,23 @@ class ExtendedSignUpForm(UserCreationForm):
 @staff_member_required
 def create_class(request):
     if request.method == "POST":
-        # Get the start time from the form
-        start_time_str = request.POST.get('start_time')
-        start_dt = datetime.strptime(start_time_str, '%Y-%m-%dT%H:%M')
+        start_date_str = request.POST.get('start_date')
+        start_time_str = request.POST.get('start_time_only')
+        end_time_str = request.POST.get('end_time_only')
 
-        # Logic: Always set end_time to start_time + 1 hour
-        end_dt = start_dt + timedelta(hours=1)
+        start_naive = datetime.strptime(
+            f"{start_date_str} {start_time_str}", '%Y-%m-%d %H:%M')
+
+        start_dt = start_naive.replace(tzinfo=BUCHAREST)
+
+        if end_time_str:
+            end_naive = datetime.strptime(
+                f"{start_date_str} {end_time_str}", '%Y-%m-%d %H:%M')
+            end_dt = end_naive.replace(tzinfo=BUCHAREST)
+            if end_dt <= start_dt:
+                end_dt = start_dt + timedelta(hours=1)
+        else:
+            end_dt = start_dt + timedelta(hours=1)
 
         iterations = 4 if request.POST.get('is_recurring') == 'on' else 1
 
@@ -243,10 +280,12 @@ def create_class(request):
                 title=request.POST.get('title'),
                 description=request.POST.get('description'),
                 start_time=start_dt + timedelta(weeks=i),
-                end_time=end_dt + timedelta(weeks=i),  # Automatically 1 hour later
+                end_time=end_dt + timedelta(weeks=i),
                 price=request.POST.get('price'),
                 capacity=request.POST.get('capacity'),
-                instructor=request.user
+                instructor=request.user,
+                is_recurring=bool(request.POST.get('is_recurring')),
+                day_of_week=start_dt.weekday() if request.POST.get('is_recurring') else None
             )
         return redirect('instructor_dashboard')
 
