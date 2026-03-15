@@ -4,8 +4,13 @@
 }
 
 {
-    "files.associations": {
-        "**/templates/**/*.html": "django-html"
+     "files.associations": {
+        "**/*.html": "html",
+        "**/templates/*/*.html": "django-html",
+        "**/templates/*": "django-html",
+        "**/requirements{/**,*}.{txt,in}": "pip-requirements"
     },
-    "editor.formatOnSave": false
+    "emmet.includeLanguages": {
+        "django-html": "html"
+    },
 }

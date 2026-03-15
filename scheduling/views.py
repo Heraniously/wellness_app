@@ -15,6 +15,7 @@ from django import forms
 from django.contrib.auth.models import User, Group
 from .forms import ProfessionalSignUpForm
 from decimal import Decimal
+from django.http import JsonResponse
 BUCHAREST = ZoneInfo('Europe/Bucharest')
 
 
@@ -290,3 +291,42 @@ def create_class(request):
         return redirect('instructor_dashboard')
 
     return render(request, 'scheduling/create_class.html')
+
+
+def calendar_view(request):
+    return render(request, 'scheduling/calendar.html')
+
+
+def classes_json(request):
+    classes = WellnessClass.objects.filter(start_time__gt=timezone.now())
+
+    # Assign a color per instructor
+    instructor_colors = {}
+    colors = ['#6d8b74', '#e07a5f', '#3d405b', '#81b29a', '#f2cc8f', '#a8dadc']
+
+    events = []
+    for c in classes:
+        instructor_id = c.instructor_id
+        if instructor_id not in instructor_colors:
+            instructor_colors[instructor_id] = colors[len(
+                instructor_colors) % len(colors)]
+
+        spots_left = c.capacity - c.booking_set.count()
+
+        events.append({
+            'id': c.id,
+            'title': c.title,
+            'start': c.start_time.isoformat(),
+            'end': c.end_time.isoformat(),
+            'color': instructor_colors[instructor_id],
+            'extendedProps': {
+                'instructor': c.instructor.get_full_name() or c.instructor.username if c.instructor else 'TBA',
+                'description': c.description,
+                'price': str(c.price),
+                'spots_left': spots_left,
+                'is_full': spots_left <= 0,
+                'class_id': c.id,
+            }
+        })
+
+    return JsonResponse(events, safe=False)

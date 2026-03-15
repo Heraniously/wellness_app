@@ -1,0 +1,138 @@
+{% extends 'base.html' %} 
+{% block title %}
+Class Calendar
+{% endblock %} 
+{% block content %}
+<div class="container-fluid py-4">
+  <h2 class="fw-bold text-center mb-4" style="color: #6d8b74">
+    Class Schedule
+  </h2>
+  <div id="calendar"></div>
+</div>
+
+<!-- Class Detail Modal -->
+<div class="modal fade" id="classModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header" id="modalHeader">
+        <h5 class="modal-title fw-bold" id="modalTitle"></h5>
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="modal"
+        ></button>
+      </div>
+      <div class="modal-body">
+        <p>
+          <strong>👤 Instructor:</strong> <span id="modalInstructor"></span>
+        </p>
+        <p><strong>🕐 Time:</strong> <span id="modalTime"></span></p>
+        <p>
+          <strong>📝 Description:</strong> <span id="modalDescription"></span>
+        </p>
+        <p><strong>💶 Price:</strong> €<span id="modalPrice"></span></p>
+        <p><strong>🪑 Spots left:</strong> <span id="modalSpots"></span></p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+          Close
+        </button>
+        <a
+          href="#"
+          id="modalBookBtn"
+          class="btn text-white"
+          style="background-color: #6d8b74"
+        >
+          Book This Class
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %} {% block scripts %}
+<!-- FullCalendar -->
+<link
+  href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.css"
+  rel="stylesheet"
+/>
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js"></script>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const calendarEl = document.getElementById("calendar");
+
+    const calendar = new FullCalendar.Calendar(calendarEl, {
+      initialView: "timeGridWeek",
+      headerToolbar: {
+        left: "prev,next today",
+        center: "title",
+        right: "timeGridWeek,timeGridDay",
+      },
+      height: "auto",
+      allDaySlot: false,
+      slotMinTime: "07:00:00",
+      slotMaxTime: "22:00:00",
+      events: "/api/classes/",
+      eventClick: function (info) {
+        const props = info.event.extendedProps;
+        const start = info.event.start;
+        const end = info.event.end;
+
+        // Format time
+        const timeStr =
+          start.toLocaleTimeString("en-GB", {
+            hour: "2-digit",
+            minute: "2-digit",
+          }) +
+          " - " +
+          end.toLocaleTimeString("en-GB", {
+            hour: "2-digit",
+            minute: "2-digit",
+          }) +
+          ", " +
+          start.toLocaleDateString("en-GB", {
+            weekday: "long",
+            day: "numeric",
+            month: "long",
+          });
+
+        // Fill modal
+        document.getElementById("modalTitle").textContent = info.event.title;
+        document.getElementById("modalHeader").style.backgroundColor =
+          info.event.backgroundColor;
+        document.getElementById("modalHeader").style.color = "white";
+        document.getElementById("modalInstructor").textContent =
+          props.instructor;
+        document.getElementById("modalTime").textContent = timeStr;
+        document.getElementById("modalDescription").textContent =
+          props.description;
+        document.getElementById("modalPrice").textContent = props.price;
+        document.getElementById("modalSpots").textContent = props.is_full
+          ? "❌ Full"
+          : props.spots_left + " spots available";
+
+        // Book button
+        const bookBtn = document.getElementById("modalBookBtn");
+        if (props.is_full) {
+          bookBtn.textContent = "Class Full";
+          bookBtn.classList.add("disabled");
+        } else {
+          bookBtn.textContent = "Book This Class";
+          bookBtn.classList.remove("disabled");
+          bookBtn.href = "/book/" + props.class_id + "/finalize/";
+        }
+
+        // Show modal
+        new bootstrap.Modal(document.getElementById("classModal")).show();
+      },
+      eventDidMount: function (info) {
+        // Add spots remaining as tooltip
+        const spots = info.event.extendedProps.spots_left;
+        info.el.title = spots <= 0 ? "Full" : spots + " spots left";
+      },
+    });
+
+    calendar.render();
+  });
+</script>
+{% endblock %}
