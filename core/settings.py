@@ -35,7 +35,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
-
+CSRF_TRUSTED_ORIGINS = ['https://wellnessapp-production-34b8.up.railway.app']
 ROOT_URLCONF = 'core.urls'
 
 TEMPLATES = [
