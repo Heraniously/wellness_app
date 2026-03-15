@@ -95,7 +95,3 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 # Auth redirects
 LOGIN_REDIRECT_URL = 'dashboard'
 LOGOUT_REDIRECT_URL = 'class_list'
-
-DEBUG = True
-DB_NAME = wellness_db
-...
