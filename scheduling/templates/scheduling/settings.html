@@ -1,81 +1,104 @@
 {% extends 'base.html' %}
 {% block content %}
-<h4 class="mb-3">Settings</h4>
+<div style="padding: 16px;">
+  <h1 class="page-title">Settings</h1>
 
-<!-- My Profile -->
-<div class="card mb-3">
-  <div class="card-body p-3">
-    <h6 class="fw-bold mb-2">My Profile</h6>
-    <div class="mb-2 small">
-      <div><strong>Username:</strong> {{ request.user.username }}</div>
-      <div><strong>First name:</strong> {{ request.user.first_name|default:"-" }}</div>
-      <div><strong>Last name:</strong> {{ request.user.last_name|default:"-" }}</div>
+  <!-- My Profile -->
+  <div class="settings-group">
+    <div class="settings-row">
+      <div class="settings-label">Username</div>
+      <div class="settings-value">{{ request.user.username }}</div>
     </div>
-    <form method="post">
+    <div class="settings-row">
+      <div class="settings-label">First name</div>
+      <div class="settings-value">{{ request.user.first_name|default:"-" }}</div>
+    </div>
+    <div class="settings-row">
+      <div class="settings-label">Last name</div>
+      <div class="settings-value">{{ request.user.last_name|default:"-" }}</div>
+    </div>
+  </div>
+
+  <div class="settings-group">
+    <form method="post" class="w-100">
       {% csrf_token %}
       <input type="hidden" name="action" value="update_email">
-      <div class="mb-2">
-        <label class="form-label small mb-1">Email</label>
-        <input type="email" name="email" value="{{ request.user.email }}" class="form-control form-control-sm">
+      <div class="settings-row">
+        <div class="settings-label">Email</div>
+        <div class="settings-value" style="max-width: 60%;">
+          <input type="email" name="email" value="{{ request.user.email }}" class="form-control form-control-sm">
+        </div>
       </div>
-      <button type="submit" class="btn btn-primary btn-sm w-100 mb-2">Update Email</button>
+      <div class="settings-row">
+        <button type="submit" class="btn btn-primary btn-sm w-100">Update Email</button>
+      </div>
     </form>
-    <a href="/accounts/password_change/" class="btn btn-outline-secondary btn-sm w-100">
-      Change Password
-    </a>
-  </div>
-</div>
-
-<!-- Leaf Balance & History -->
-{% if not request.user.is_superuser %}
-<div class="card mb-3">
-  <div class="card-body p-3">
-    <h6 class="fw-bold mb-2">Leaf Balance</h6>
-    <div class="d-flex justify-content-between align-items-center mb-2">
-      <div>
-        <div class="small text-muted">Current balance</div>
-        <div class="fw-bold" style="font-size: 1.6rem;">{{ leaf_balance.leaves }} 🍃</div>
-      </div>
-      <a href="{% url 'buy_leaves' %}" class="btn btn-primary btn-sm">Buy More</a>
+    <div class="settings-row">
+      <a href="/accounts/password_change/" class="btn btn-outline-secondary btn-sm w-100">
+        Change Password
+      </a>
     </div>
-    <div class="small text-muted mb-1">Recent leaf requests</div>
+  </div>
+
+  <!-- Leaf Balance & History -->
+  {% if not request.user.is_superuser %}
+  <h2 class="section-title">Leaves</h2>
+  <div class="settings-group">
+    <div class="settings-row">
+      <div class="settings-label">Balance</div>
+      <div class="settings-value">{{ leaf_balance.leaves }} 🍃</div>
+    </div>
+    <div class="settings-row">
+      <a href="{% url 'buy_leaves' %}" class="btn btn-primary btn-sm w-100">Buy More Leaves</a>
+    </div>
+  </div>
+  <div class="settings-group">
+    <div class="settings-row">
+      <div class="settings-label">Recent requests</div>
+      <div class="settings-value"></div>
+    </div>
     {% for req in leaf_requests %}
-    <div class="d-flex justify-content-between small mb-1">
-      <span>{{ req.leaves_requested }} leaves · €{{ req.amount_paid }} · {{ req.created_at|date:"M d" }}</span>
-      <span class="text-muted">{{ req.get_status_display }}</span>
+    <div class="settings-row">
+      <div class="settings-value">
+        {{ req.leaves_requested }} leaves · €{{ req.amount_paid }} · {{ req.created_at|date:"M d" }}
+      </div>
+      <div class="settings-value">{{ req.get_status_display }}</div>
     </div>
     {% empty %}
-    <p class="small text-muted mb-0">No leaf requests yet.</p>
+    <div class="settings-row">
+      <div class="settings-value muted">No leaf requests yet.</div>
+    </div>
     {% endfor %}
   </div>
-</div>
-{% endif %}
+  {% endif %}
 
-<!-- Admin (superusers only) -->
-{% if request.user.is_superuser %}
-<div class="card mb-3">
-  <div class="card-body p-3">
-    <h6 class="fw-bold mb-2">Admin</h6>
-    <div class="d-flex justify-content-between align-items-center mb-2 small">
-      <span>Pending leaf requests</span>
-      <span class="badge bg-warning text-dark">{{ pending_leaf_count }}</span>
+  <!-- Admin (superusers only) -->
+  {% if request.user.is_superuser %}
+  <h2 class="section-title">Admin</h2>
+  <div class="settings-group">
+    <div class="settings-row">
+      <div class="settings-label">Pending leaf requests</div>
+      <div class="settings-value">{{ pending_leaf_count }}</div>
     </div>
-    <a href="{% url 'admin_leaves' %}" class="btn btn-primary btn-sm w-100 mb-2">
-      Manage Leaves
-    </a>
-    <a href="/admin/" class="btn btn-outline-secondary btn-sm w-100">
-      Django Admin (Manage Users)
-    </a>
+    <div class="settings-row">
+      <a href="{% url 'admin_leaves' %}" class="btn btn-primary btn-sm w-100">
+        Manage Leaves
+      </a>
+    </div>
+    <div class="settings-row">
+      <a href="/admin/" class="btn btn-outline-secondary btn-sm w-100">
+        Django Admin (Manage Users)
+      </a>
+    </div>
   </div>
+  {% endif %}
+
+  <!-- Logout -->
+  <form method="POST" action="{% url 'logout' %}" class="mt-3">
+    {% csrf_token %}
+    <button type="submit" class="btn btn-outline-secondary w-100">
+      Log Out
+    </button>
+  </form>
 </div>
-{% endif %}
-
-<form method="POST" action="{% url 'logout' %}">
-  {% csrf_token %}
-  <button type="submit" class="btn w-100 mt-4"
-    style="background-color: var(--zen-terracotta); color: white; border-radius: 12px; padding: 12px;">
-    Log Out
-  </button>
-</form>
-
 {% endblock %}

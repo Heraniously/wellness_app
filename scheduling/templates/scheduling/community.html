@@ -1,10 +1,10 @@
 {% extends 'base.html' %}
 {% load humanize %}
 {% block content %}
-<h4 class="mb-3">Community</h4>
+<h1 class="page-title mb-3">Community</h1>
 
 <!-- New post form -->
-<div class="card mb-3">
+<div class="card mb-4">
   <div class="card-body p-3">
     <form method="post" action="{% url 'create_post' %}">
       {% csrf_token %}
@@ -12,70 +12,75 @@
       <textarea name="text" maxlength="300" rows="2" class="form-control mb-2"
                 placeholder="What are you grateful for today?"></textarea>
       <button type="submit" class="btn btn-primary w-100 btn-sm">Post</button>
-      <p class="small text-muted mt-2 mb-0">Limit: 1 post per day.</p>
+      <p class="small muted mt-2 mb-0">Limit: 1 post per day.</p>
     </form>
   </div>
 </div>
 
 <!-- Feed -->
 {% for post in posts %}
-  <div class="card mb-2">
-    <div class="card-body p-3">
-      <div class="d-flex justify-content-between mb-1">
-        <div class="small fw-bold">@{{ post.user.username }}</div>
-        <div class="small text-muted">{{ post.created_at|naturaltime }}</div>
+  <div class="community-card mb-3">
+    <div class="community-header mb-2">
+      <div class="community-avatar">
+        {{ post.user.username|slice:":2"|upper }}
       </div>
-      <p class="mb-2 small">{{ post.text }}</p>
+      <div class="d-flex align-items-center w-100">
+        <span class="community-username">@{{ post.user.username }}</span>
+        <span class="community-meta ms-auto">{{ post.created_at|naturaltime }}</span>
+      </div>
+    </div>
+    <div class="community-body mb-2">
+      {{ post.text }}
+    </div>
 
-      <div class="d-flex align-items-center justify-content-between">
-        <div>
-          <form method="post" action="{% url 'toggle_like' post.id %}" class="d-inline">
-            {% csrf_token %}
-            {% if post.id in user_likes %}
-              <button type="submit" class="btn btn-sm btn-outline-secondary py-0 px-2">
-                ❤️ {{ post.likes.count }}
-              </button>
-            {% else %}
-              <button type="submit" class="btn btn-sm btn-outline-secondary py-0 px-2">
-                🤍 {{ post.likes.count }}
-              </button>
-            {% endif %}
-          </form>
-          <span class="small text-muted ms-2">
-            💬 {{ post.comments.count }}
-          </span>
-        </div>
-        {% if request.user == post.user or request.user.is_superuser %}
-          <form method="post" action="{% url 'delete_post' post.id %}">
-            {% csrf_token %}
-            <button type="submit" class="btn btn-sm btn-link text-danger small p-0">Delete</button>
-          </form>
-        {% endif %}
+    <div class="d-flex align-items-center justify-content-between mt-1">
+      <div class="d-flex align-items-center gap-2">
+        <form method="post" action="{% url 'toggle_like' post.id %}" class="d-inline">
+          {% csrf_token %}
+          {% if post.id in user_likes %}
+            <button type="submit" class="btn btn-sm btn-outline-secondary py-0 px-2">
+              ❤️ {{ post.likes.count }}
+            </button>
+          {% else %}
+            <button type="submit" class="btn btn-sm btn-outline-secondary py-0 px-2">
+              🤍 {{ post.likes.count }}
+            </button>
+          {% endif %}
+        </form>
+        <span class="small muted">
+          💬 {{ post.comments.count }}
+        </span>
       </div>
-
-      {% if post.comments.all %}
-      <div class="mt-2">
-        {% for comment in post.comments.all %}
-          <div class="d-flex justify-content-between align-items-start mb-1">
-            <div>
-              <span class="small fw-bold">@{{ comment.user.username }}</span>
-              <span class="small text-muted">· {{ comment.created_at|naturaltime }}</span>
-              <div class="small">{{ comment.text }}</div>
-            </div>
-            {% if request.user == comment.user or request.user.is_superuser %}
-              <form method="post" action="{% url 'delete_comment' comment.id %}">
-                {% csrf_token %}
-                <button type="submit" class="btn btn-sm btn-link text-danger small p-0">x</button>
-              </form>
-            {% endif %}
-          </div>
-        {% endfor %}
-      </div>
+      {% if request.user == post.user or request.user.is_superuser %}
+        <form method="post" action="{% url 'delete_post' post.id %}">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-sm btn-link text-danger small p-0">Delete</button>
+        </form>
       {% endif %}
     </div>
+
+    {% if post.comments.all %}
+    <div class="mt-2">
+      {% for comment in post.comments.all %}
+        <div class="d-flex justify-content-between align-items-start mb-1">
+          <div>
+            <span class="small fw-bold">@{{ comment.user.username }}</span>
+            <span class="small muted">· {{ comment.created_at|naturaltime }}</span>
+            <div class="small">{{ comment.text }}</div>
+          </div>
+          {% if request.user == comment.user or request.user.is_superuser %}
+            <form method="post" action="{% url 'delete_comment' comment.id %}">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-sm btn-link text-danger small p-0">x</button>
+            </form>
+          {% endif %}
+        </div>
+      {% endfor %}
+    </div>
+    {% endif %}
   </div>
 {% empty %}
-  <p class="text-muted small">No posts yet. Be the first to share a mindful moment.</p>
+  <p class="muted small">No posts yet. Be the first to share a mindful moment.</p>
 {% endfor %}
 {% endblock %}
 

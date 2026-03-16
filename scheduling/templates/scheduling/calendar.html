@@ -74,7 +74,7 @@ Class Calendar
       eventContent: function (arg) {
         const props = arg.event.extendedProps;
         const color = arg.event.backgroundColor;
-        const opacity = props.user_has_booked ? 0.4 : 1;
+        const opacity = props.user_has_booked ? 0.4 : 0.85;
         // Common inner content for both views (without time for list view, since FC shows it)
         const inner = `
           <div style="
@@ -105,7 +105,7 @@ Class Calendar
               padding: 3px 5px;
               font-size: 0.75rem;
               cursor: pointer;
-              background-color: ${color};
+            background-color: ${color};
               border-radius: 4px;
               color: white;
               width: 100%;

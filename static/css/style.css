@@ -7,12 +7,13 @@
     --zen-charcoal: #36454F;   /* Soft Charcoal for text */
     --zen-cream: #FFFDD0;      /* Lighter Cream for cards */
     --zen-terracotta: #C27E79; /* Warm Earthy Red for 'Danger/Cancel' */
+    --zen-white: #FAFAF8;      /* Soft off-white for floating surfaces */
 }
 
 /* Global Styles */
 body {
     background-color: var(--zen-beige) !important;
-    padding: 16px 16px 80px 16px; /* space for content + bottom nav on mobile */
+    padding: 16px 16px 90px 16px; /* space for content + bottom nav on mobile */
     color: var(--zen-charcoal) !important;
     font-family: 'Noto Sans', sans-serif;
 }
@@ -20,6 +21,33 @@ body {
 h1, h2, h3, h4, h5 {
     font-family: 'Montserrat', sans-serif;
     color: var(--zen-charcoal);
+}
+
+.page-title {
+    font-size: 1.4rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+}
+
+/* Stat cards (dashboard metrics) */
+.stat-card {
+    border-radius: 16px;
+    background-color: var(--zen-white);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
+    padding: 10px 12px;
+}
+
+.stat-card-label {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: rgba(54, 69, 79, 0.7);
+    margin-bottom: 2px;
+}
+
+.stat-card-value {
+    font-size: 1.4rem;
+    font-weight: 600;
 }
 
 /* Bottom mobile nav */
@@ -112,6 +140,36 @@ h1, h2, h3, h4, h5 {
 
 .container{
     padding: 0px;
+}
+
+.settings-group {
+    margin-bottom: 20px;
+    border-radius: 16px;
+    background-color: var(--zen-cream);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.04);
+    overflow: hidden;
+}
+
+.settings-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 16px;
+    font-size: 0.9rem;
+}
+
+.settings-row + .settings-row {
+    border-top: 1px solid rgba(0, 0, 0, 0.04);
+}
+
+.settings-label {
+    font-weight: 500;
+}
+
+.settings-value {
+    font-size: 0.8rem;
+    color: rgba(54, 69, 79, 0.75);
+    text-align: right;
 }
 
 /* Container that holds everything */
@@ -300,15 +358,31 @@ h1, h2, h3, h4, h5 {
     color: var(--zen-charcoal) !important;
 }
 
+.fc a,
+.fc a:link,
+.fc a:visited {
+    color: var(--zen-charcoal) !important;
+    text-decoration: none !important;
+}
+
+.fc a:hover,
+.fc a:focus {
+    text-decoration: none !important;
+}
+
 .fc-toolbar-title {
     font-family: 'Montserrat', sans-serif !important;
     color: var(--zen-charcoal) !important;
+    white-space: nowrap !important;
+    font-size: 1rem !important;
 }
 
 .fc-button {
     background-color: var(--zen-sage) !important;
     border-color: var(--zen-sage) !important;
-    border-radius: 12px !important;
+    border-radius: 999px !important;
+    font-size: 0.7rem !important;
+    padding: 3px 8px !important;
 }
 
 .fc-button:hover {

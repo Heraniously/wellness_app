@@ -2,8 +2,8 @@
 {% block content %}
 {% if is_guest %}
   <div class="d-flex flex-column align-items-center text-center" style="min-height: 70vh; justify-content: center;">
-    <h2 class="mb-3">Welcome to Zen Room</h2>
-    <p class="text-muted mb-4 px-3">
+    <h1 class="page-title mb-2">Welcome to Zen Room</h1>
+    <p class="body-text muted mb-4 px-3">
       Book yoga classes, track your leaves, and share mindful moments with the community.
     </p>
     <div class="w-100 px-3">
@@ -13,31 +13,27 @@
     </div>
   </div>
 {% else %}
-  <h3 class="mb-3">My Dashboard</h3>
+  <h1 class="page-title">My Dashboard</h1>
 
   <!-- Stats row -->
   <div class="row mb-3">
-    <div class="col-6 mb-3">
-      <div class="card border-0 shadow-sm">
-        <div class="card-body text-center py-3">
-          <div class="small text-muted">Streak</div>
-          <div class="fw-bold" style="font-size: 1.4rem;">{{ streak_weeks }} wk</div>
-        </div>
+    <div class="col-6 mb-2">
+      <div class="stat-card text-center">
+        <div class="stat-card-label">Streak</div>
+        <div class="stat-card-value">{{ streak_weeks }} wk</div>
       </div>
     </div>
-    <div class="col-6 mb-3">
-      <div class="card border-0 shadow-sm">
-        <div class="card-body text-center py-3">
-          <div class="small text-muted">Total Classes</div>
-          <div class="fw-bold" style="font-size: 1.4rem;">{{ total_attended }}</div>
-        </div>
+    <div class="col-6 mb-2">
+      <div class="stat-card text-center">
+        <div class="stat-card-label">Total classes</div>
+        <div class="stat-card-value">{{ total_attended }}</div>
       </div>
     </div>
     {% if favorite_class_title %}
-    <div class="col-12 mb-3">
-      <div class="card border-0 shadow-sm">
-        <div class="card-body py-3">
-          <div class="small text-muted">Favourite Class</div>
+    <div class="col-12 mb-2">
+      <div class="card mb-3">
+        <div class="card-body p-3">
+          <div class="stat-card-label">Favourite class</div>
           <div class="fw-bold">{{ favorite_class_title }}</div>
         </div>
       </div>
@@ -46,15 +42,13 @@
   </div>
 
   <!-- Leaf balance -->
-  <div class="card mb-4">
+  <div class="card mb-3">
     <div class="card-body p-3">
       <div class="d-flex justify-content-between align-items-center">
         <div>
-          <h5 class="fw-bold mb-1">🍃 Your Leaves</h5>
-          <p class="text-muted mb-0">1 leaf = 1 class (€{{ leaf_price_eur }})</p>
-        </div>
-        <div class="text-center">
-          <h1 style="font-size: 2.5rem; color: var(--zen-sage);">{{ leaf_balance.leaves }}</h1>
+          <div class="stat-card-label">Your leaves</div>
+          <div class="stat-card-value" style="font-size: 1.8rem;">{{ leaf_balance.leaves }} 🍃</div>
+          <p class="body-text muted mb-0" style="font-size: 0.8rem;">1 leaf = 1 class (€{{ leaf_price_eur }})</p>
         </div>
       </div>
       <a href="{% url 'buy_leaves' %}" class="btn btn-primary w-100 mt-3">Buy More Leaves</a>
@@ -62,69 +56,55 @@
   </div>
 
   <!-- Upcoming bookings -->
-  <h5 class="mb-2">Upcoming Sessions</h5>
+  <h2 class="section-title">Upcoming Sessions</h2>
   <div class="mb-4">
     {% for booking in upcoming %}
-      <div class="card shadow-sm border-0 mb-2">
-        <div class="card-body">
-          <h6 class="fw-bold mb-1">{{ booking.wellness_class.title }}</h6>
-          <p class="mb-1 small"><strong>Instructor:</strong> {{ booking.wellness_class.instructor.get_full_name|default:booking.wellness_class.instructor.username }}</p>
-          <p class="mb-1 small"><strong>Time:</strong> {{ booking.wellness_class.start_time|date:"D, M d @ H:i" }}</p>
-          <p class="mb-2">
-            <span class="badge {% if booking.is_paid %}bg-success{% else %}bg-info{% endif %}">
+      <div class="card mb-3">
+        <div class="card-body" style="padding: 16px;">
+          <div class="d-flex justify-content-between align-items-start mb-2">
+            <div>
+              <div class="fw-bold">{{ booking.wellness_class.title }}</div>
+              <div class="small muted">
+                {{ booking.wellness_class.start_time|date:"D, M d @ H:i" }}
+              </div>
+              <div class="small">
+                <strong>Instructor:</strong>
+                {{ booking.wellness_class.instructor.get_full_name|default:booking.wellness_class.instructor.username }}
+              </div>
+            </div>
+            <span class="badge {% if booking.is_paid %}bg-success{% else %}bg-info{% endif %} small">
               {{ booking.get_payment_type_display }}
             </span>
-          </p>
+          </div>
           {% if booking.wellness_class.start_time > now_plus_24h %}
-            <form action="{% url 'cancel_booking' booking.id %}" method="post">
+            <form action="{% url 'cancel_booking' booking.id %}" method="post" class="mt-2">
               {% csrf_token %}
-              <button type="submit" class="btn btn-outline-danger btn-sm w-100"
+              <button type="submit" class="btn btn-sm w-100"
+                      style="background-color: var(--zen-terracotta); color: #fff; border-radius: 999px;"
                       onclick="return confirm('Are you sure you want to cancel this booking?')">
                 Cancel Booking
               </button>
             </form>
           {% else %}
-            <div class="alert alert-warning py-1 px-2 mb-0 small text-center">
+            <div class="small muted mt-2 text-center">
               Cancellation locked (starts in &lt; 24h)
             </div>
           {% endif %}
         </div>
       </div>
     {% empty %}
-      <p class="text-muted small">You have no upcoming sessions.</p>
+      <p class="muted small">You have no upcoming sessions.</p>
     {% endfor %}
   </div>
-
-  <!-- Instructor section -->
-  {% if instructor_classes %}
-  <h5 class="mb-2">Teaching This Week</h5>
-  <div class="mb-4">
-    {% for cls in instructor_classes %}
-      <div class="card shadow-sm border-0 mb-2">
-        <div class="card-body py-2">
-          <div class="d-flex justify-content-between">
-            <span class="small fw-bold">{{ cls.title }}</span>
-            <span class="small text-muted">{{ cls.start_time|date:"D, M d @ H:i" }}</span>
-          </div>
-          <div class="small text-muted">
-            {{ cls.booking_set.count }} / {{ cls.capacity }} booked
-          </div>
-        </div>
-      </div>
-    {% endfor %}
-  </div>
-  {% endif %}
 
   <!-- Past history (compact) -->
-  <h6 class="text-muted mb-2">Recent Classes</h6>
+  <h2 class="section-title">Recent Classes</h2>
   <div class="row">
     {% for booking in past|slice:":6" %}
     <div class="col-6 mb-2">
-      <div class="card bg-light border-0">
-        <div class="card-body py-2">
-          <p class="mb-0 small"><strong>{{ booking.wellness_class.title }}</strong></p>
-          <p class="mb-0 x-small text-muted">{{ booking.wellness_class.start_time|date:"M d, Y" }}</p>
-        </div>
+      <div class="card-flat p-2" style="border-radius: 12px;">
+        <p class="mb-0 small fw-bold">{{ booking.wellness_class.title }}</p>
+        <p class="mb-0 small muted">{{ booking.wellness_class.start_time|date:"M d, Y" }}</p>
       </div>
     </div>
     {% endfor %}
