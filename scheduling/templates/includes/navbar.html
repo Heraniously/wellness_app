@@ -2,12 +2,8 @@
 <nav class="navbar navbar-expand-lg fixed-top shadow-sm">
   <div class="container-fluid px-4">
     <a class="navbar-brand d-flex align-items-center" href="{% url 'home' %}">
-      <img
-        src="https://chacham.ro/wp-content/uploads/2025/07/Untitled-design2-300x300.png"
-        alt="Cha Cham Logo"
-        height="40"
-        class="me-2"
-      />
+      <img src="https://chacham.ro/wp-content/uploads/2025/07/Untitled-design2-300x300.png" alt="Cha Cham Logo"
+        height="40" class="me-2" />
     </a>
 
     <div class="navbar-text me-3">
@@ -16,39 +12,31 @@
       </span>
     </div>
 
-    <button
-      class="navbar-toggler"
-      type="button"
-      data-bs-toggle="collapse"
-      data-bs-target="#zenNavbar"
-    >
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#zenNavbar">
       <span class="navbar-toggler-icon"></span>
     </button>
 
     <div class="collapse navbar-collapse" id="zenNavbar">
       <ul class="navbar-nav ms-auto align-items-center">
         <li class="nav-item">
-          <a class="nav-link px-3" href="{% url 'class_list' %}"
-            >Explore Classes</a
-          >
+          <a class="nav-link px-3" href="{% url 'class_list' %}">Explore Classes</a>
         </li>
 
         {% if user.is_authenticated %} {% if user.is_staff %}
         <li class="nav-item">
-          <a
-            class="nav-link text-success fw-bold px-3"
-            href="{% url 'instructor_dashboard' %}"
-            >Instructor Portal</a
-          >
+          <a class="nav-link text-success fw-bold px-3" href="{% url 'instructor_dashboard' %}">Instructor Portal</a>
         </li>
+
+        {% if user.is_superuser %}
+        <li class="nav-item">
+          <a class="nav-link" href="{% url 'admin_leaves' %}">🍃 Manage Leaves</a>
+        </li>
+        {% endif %}
+
+
         {% endif %} {% if user.is_superuser %}
         <li class="nav-item">
-          <a
-            class="nav-link text-danger small px-3"
-            href="/admin/"
-            target="_blank"
-            >System Admin</a
-          >
+          <a class="nav-link text-danger small px-3" href="/admin/" target="_blank">System Admin</a>
         </li>
         {% endif %}
 
@@ -63,10 +51,7 @@
         <li class="nav-item ms-lg-2">
           <form action="{% url 'logout' %}" method="post" class="d-inline">
             {% csrf_token %}
-            <button
-              type="submit"
-              class="btn btn-outline-secondary btn-sm px-3 rounded-pill"
-            >
+            <button type="submit" class="btn btn-outline-secondary btn-sm px-3 rounded-pill">
               Logout ({{ user.username }})
             </button>
           </form>
@@ -76,11 +61,7 @@
           <a class="nav-link px-3" href="{% url 'login' %}">Login</a>
         </li>
         <li class="nav-item ms-lg-2">
-          <a
-            class="btn btn-primary btn-sm px-4 rounded-pill shadow-sm"
-            href="{% url 'signup' %}"
-            >Sign Up</a
-          >
+          <a class="btn btn-primary btn-sm px-4 rounded-pill shadow-sm" href="{% url 'signup' %}">Sign Up</a>
         </li>
         {% endif %}
       </ul>
