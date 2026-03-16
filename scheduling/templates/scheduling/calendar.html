@@ -84,7 +84,8 @@ Class Calendar
             word-wrap: break-word;
           ">
             ${arg.event.title}<br>
-            <small style="opacity: 0.85;">${props.instructor}</small>
+            <small style="opacity: 0.85;">${props.instructor}</small><br>
+            ${props.user_has_booked ? '<span style="font-size:0.7rem; color:#d1ffe0;">Already booked ✅</span>' : ''}
           </div>`;
 
         // List view: use inner directly, letting FullCalendar handle the time/row styling
@@ -161,8 +162,22 @@ Class Calendar
       },
 
       eventDidMount: function (info) {
-        const spots = info.event.extendedProps.spots_left;
+        const props = info.event.extendedProps;
+        const spots = props.spots_left;
+        // Tooltip for all views
         info.el.title = spots <= 0 ? "Full" : spots + " spots left";
+
+        // List view row styling: use teacher color as background, dim if booked
+        if (info.view.type === 'listMonth') {
+          const bg = info.event.backgroundColor;
+          const dimOpacity = props.user_has_booked ? 0.4 : 1;
+          const cells = info.el.querySelectorAll('td');
+          cells.forEach((cell) => {
+            cell.style.backgroundColor = bg;
+            cell.style.opacity = dimOpacity;
+            cell.style.color = 'white';
+          });
+        }
       },
     });
 

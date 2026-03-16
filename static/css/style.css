@@ -352,7 +352,7 @@ h1, h2, h3, h4, h5 {
 }
 
 .fc-list-event {
-    background-color: var(--zen-beige) !important;
+    background-color: transparent !important; /* color is applied inline from JS */
 }
 
 .fc-list-event:hover td {
