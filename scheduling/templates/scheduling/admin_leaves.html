@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+{% block title %}Manage Leaves{% endblock %}
+{% block content %}
+<div class="container py-5">
+    <h2 class="fw-bold mb-4">🍃 Leaf Requests</h2>
+
+    <!-- Pending Requests -->
+    <div class="card mb-4">
+        <div class="card-body p-4">
+            <h4 class="fw-bold mb-3">⏳ Pending ({{ pending|length }})</h4>
+            {% if pending %}
+            {% for req in pending %}
+            <div class="card mb-3">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-4">
+                            <strong>{{ req.user.get_full_name|default:req.user.username }}</strong><br>
+                            <small class="text-muted">{{ req.user.email }}</small>
+                        </div>
+                        <div class="col-md-3">
+                            <span style="color: var(--zen-sage);">🍃 {{ req.leaves_requested }} leaves</span><br>
+                            <small>€{{ req.amount_paid }}</small>
+                        </div>
+                        <div class="col-md-2">
+                            <small class="text-muted">{{ req.created_at|date:"d M Y" }}</small>
+                        </div>
+                        <div class="col-md-2">
+                            {% if req.payment_proof %}
+                            <a href="{{ req.payment_proof.url }}" target="_blank" class="btn btn-sm btn-outline-secondary">View Proof</a>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-1 d-flex gap-2">
+                            <a href="{% url 'approve_leaf_request' req.id %}" class="btn btn-sm btn-primary">✓</a>
+                            <a href="{% url 'reject_leaf_request' req.id %}" class="btn btn-sm btn-danger">✗</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+            {% else %}
+            <p class="text-muted">No pending requests.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Recently Approved -->
+    <div class="card">
+        <div class="card-body p-4">
+            <h4 class="fw-bold mb-3">✅ Recently Approved</h4>
+            {% if approved %}
+            {% for req in approved %}
+            <div class="d-flex justify-content-between align-items-center p-2 border-bottom">
+                <span>{{ req.user.username }}</span>
+                <span>🍃 {{ req.leaves_requested }} leaves</span>
+                <span class="text-muted">{{ req.created_at|date:"d M Y" }}</span>
+                <span class="badge bg-success">Approved</span>
+            </div>
+            {% endfor %}
+            {% else %}
+            <p class="text-muted">No approved requests yet.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

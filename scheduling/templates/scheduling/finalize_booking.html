@@ -1,62 +1,55 @@
 {% extends 'base.html' %}
 {% load static %}
-
 {% block content %}
 <div class="container py-5">
     <div class="row justify-content-center">
         <div class="col-md-8 col-lg-6">
             <div class="card p-4 shadow-sm border-0">
                 <h2 class="text-center mb-4">Complete Your Booking</h2>
-
+                
                 <div class="booking-info p-3 rounded-4 mb-4" style="background-color: var(--zen-cream);">
                     <h4 class="fw-bold">{{ wellness_class.title }}</h4>
                     <p class="mb-1"><strong>Instructor:</strong> {{ wellness_class.instructor.get_full_name }}</p>
-                    <p class="mb-0"><strong>Time:</strong> {{ wellness_class.start_time }} - {{ wellness_class.end_time }}</p>
+                    <p class="mb-0"><strong>Time:</strong> {{ wellness_class.start_time|date:"D d M Y, H:i" }} - {{ wellness_class.end_time|date:"H:i" }}</p>
                 </div>
 
                 <form method="POST">
                     {% csrf_token %}
-
                     <div class="mb-4">
-                        <label for="payment_type" class="form-label fw-bold">Select Payment Option:</label>
-                        <select name="payment_type" id="payment_type" class="form-select border-2" onchange="toggleRevolut()">
-                            <option value="drop-in">Drop-in (Pay at Studio: ${{ class_session.price }})</option>
-                            <option value="online">Pay Now (10% Discount: ${{ class_session.discounted_price }})</option>
-                        </select>
-                    </div>
-
-                    <div id="revolut-box" class="revolut-section p-3 rounded-4 mb-4 border border-1 shadow-sm" style="display: none;">
-                        <p class="small text-muted mb-2">🌿 <strong>Zen Benefit:</strong> To secure your 10% discount, please pay <strong>${{ class_session.discounted_price }}</strong> now via Revolut:</p>
-
-                        <a href="https://revolut.me/{{ class_session.instructor.revolut_handle }}"
-                           target="_blank"
-                           class="btn btn-outline-primary btn-sm mb-3 w-100">
-                           Pay to {{ class_session.instructor.first_name }}
-                        </a>
-
-                        <label class="form-label small fw-bold">Enter Revolut Username/Reference:</label>
-                        <input type="text" name="revolut_ref" class="form-control rounded-3" placeholder="e.g. @yourname">
+                        <label class="form-label fw-bold">Select Payment Option:</label>
+                        
+                        {% if balance.leaves > 0 %}
+                        <div class="form-check p-3 border rounded mb-2" style="background-color: rgba(135,169,107,0.1);">
+                            <input class="form-check-input" type="radio" name="payment_type" id="leaf" value="leaf" checked>
+                            <label class="form-check-label fw-bold" for="leaf">
+                                🍃 Use 1 Leaf 
+                                <span class="text-muted fw-normal">(€10 — you have {{ balance.leaves }} leaf{{ balance.leaves|pluralize }})</span>
+                            </label>
+                        </div>
+                        <div class="form-check p-3 border rounded">
+                            <input class="form-check-input" type="radio" name="payment_type" id="drop_in" value="drop_in">
+                            <label class="form-check-label fw-bold" for="drop_in">
+                                💵 Pay in Person
+                                <span class="text-muted fw-normal">(€15 at the door)</span>
+                            </label>
+                        </div>
+                        {% else %}
+                        <div class="alert mb-3" style="background-color: rgba(135,169,107,0.1); border-color: var(--zen-sage);">
+                            <p class="mb-1">🍃 You have no leaves. <a href="{% url 'buy_leaves' %}">Buy leaves for €10 each</a> and save €5 per class!</p>
+                        </div>
+                        <input type="hidden" name="payment_type" value="drop_in">
+                        <div class="p-3 border rounded" style="background-color: var(--zen-cream);">
+                            <p class="fw-bold mb-0">💵 Pay in Person: €15 at the door</p>
+                        </div>
+                        {% endif %}
                     </div>
 
                     <button type="submit" class="btn btn-primary btn-lg w-100 shadow-sm">
-                        Finalize Booking
+                        Confirm Booking
                     </button>
                 </form>
             </div>
         </div>
     </div>
 </div>
-
-<script>
-function toggleRevolut() {
-    const select = document.getElementById('payment_type');
-    const revolutBox = document.getElementById('revolut-box');
-
-    if (select.value === 'online') {
-        revolutBox.style.display = 'block';
-    } else {
-        revolutBox.style.display = 'none';
-    }
-}
-</script>
 {% endblock %}

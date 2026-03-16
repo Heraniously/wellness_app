@@ -38,8 +38,8 @@ class Booking(models.Model):
     is_paid = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     payment_type = models.CharField(max_length=20, choices=[
-        ('drop_in', 'Drop-in'),
-        ('prepaid', 'Pre-paid (Discounted)')
+        ('leaf', 'Leaf (€10 online)'),
+        ('drop_in', 'Drop-in (€15 in person)'),
     ], default='drop_in')
     payment_proof = models.CharField(max_length=100, blank=True, null=True)
     amount_paid = models.DecimalField(
@@ -47,3 +47,34 @@ class Booking(models.Model):
 
     def __str__(self):
         return f"{self.client.username} - {self.wellness_class.title} ({self.payment_type})"
+
+# Tracks how many leaves each user has
+
+
+class LeafBalance(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    leaves = models.PositiveIntegerField(default=0)
+
+# When user requests to buy leaves
+
+
+class LeafRequest(models.Model):
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('approved', 'Approved'),
+        ('rejected', 'Rejected'),
+    ]
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    leaves_requested = models.PositiveIntegerField()
+    amount_paid = models.DecimalField(max_digits=6, decimal_places=2)
+    payment_proof = models.ImageField(upload_to='payment_proofs/')
+    status = models.CharField(
+        max_length=10, choices=STATUS_CHOICES, default='pending')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def approve(self):
+        balance, _ = LeafBalance.objects.get_or_create(user=self.user)
+        balance.leaves += self.leaves_requested
+        balance.save()
+        self.status = 'approved'
+        self.save()

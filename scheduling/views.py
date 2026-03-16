@@ -3,7 +3,7 @@ from urllib import request
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib.admin.views.decorators import staff_member_required
-from .models import WellnessClass, Booking
+from .models import WellnessClass, Booking, LeafBalance, LeafRequest
 from django.contrib.auth.forms import UserCreationForm
 from django.urls import reverse_lazy
 from django.views import generic
@@ -16,6 +16,7 @@ from django.contrib.auth.models import User, Group
 from .forms import ProfessionalSignUpForm
 from decimal import Decimal
 from django.http import JsonResponse
+
 BUCHAREST = ZoneInfo('Europe/Bucharest')
 
 
@@ -79,64 +80,69 @@ def book_session(request, class_id):
 @login_required
 def client_dashboard(request):
     now = timezone.now()
-    # Split classes into Upcoming and Past
     upcoming = Booking.objects.filter(
-        client=request.user, wellness_class__start_time__gt=now).order_by('wellness_class__start_time')
+        client=request.user,
+        wellness_class__start_time__gt=now
+    ).order_by('wellness_class__start_time')
     past = Booking.objects.filter(
-        client=request.user, wellness_class__start_time__lte=now)
+        client=request.user,
+        wellness_class__start_time__lte=now
+    )
+    leaf_balance, _ = LeafBalance.objects.get_or_create(user=request.user)
 
     return render(request, 'scheduling/dashboard.html', {
         'upcoming': upcoming,
         'past': past,
-        'now_plus_24h': now + timedelta(hours=24)
+        'now_plus_24h': now + timedelta(hours=24),
+        'leaf_balance': leaf_balance,
     })
 
 
 @login_required
 def finalize_booking(request, class_id):
     wellness_class = get_object_or_404(WellnessClass, id=class_id)
+    balance, _ = LeafBalance.objects.get_or_create(user=request.user)
 
     if request.method == "POST":
         payment_type = request.POST.get('payment_type')
-        payment_proof = request.POST.get('payment_proof')
 
-        # 1. SAFETY CHECK: Capacity
+        # Capacity check
         if wellness_class.booking_set.count() >= wellness_class.capacity:
             messages.error(request, "Sorry, this class just filled up!")
             return redirect('class_list')
 
-        # 2. SAFETY CHECK: Double Booking
+        # Double booking check
         if Booking.objects.filter(client=request.user, wellness_class=wellness_class).exists():
             messages.warning(request, "You have already booked this session!")
             return redirect('dashboard')
 
-        # 3. PRICING LOGIC: 10% Discount
-        original_price = wellness_class.price
-        if payment_type == 'prepaid':
-            final_price = original_price * Decimal('0.90')
-        else:
-            final_price = original_price
+        # Leaf payment
+        if payment_type == 'leaf':
+            if balance.leaves < 1:
+                messages.error(request, "You don't have enough leaves!")
+                return redirect('buy_leaves')
+            balance.leaves -= 1
+            balance.save()
+            amount_paid = 10.00
 
-        # 4. CREATE BOOKING
+        # Drop-in
+        else:
+            amount_paid = 15.00
+
         Booking.objects.create(
             client=request.user,
             wellness_class=wellness_class,
             payment_type=payment_type,
-            payment_proof=payment_proof,
-            amount_paid=final_price,
-            is_paid=False
+            amount_paid=amount_paid,
+            is_paid=True if payment_type == 'leaf' else False,
         )
         return render(request, 'scheduling/success.html', {
-            # We pass 'class' to match your template's {{ class.title }}
             'wellness_class': wellness_class
         })
 
-    # Calculate discount for display in the GET request
-    discount_price = wellness_class.price * Decimal('0.90')
-
     return render(request, 'scheduling/finalize_booking.html', {
         'wellness_class': wellness_class,
-        'discount_price': discount_price
+        'balance': balance,
     })
 
 
@@ -321,3 +327,75 @@ def classes_json(request):
         })
 
     return JsonResponse(events, safe=False)
+
+
+# Purchasing leaves
+@login_required
+def buy_leaves(request):
+    balance, _ = LeafBalance.objects.get_or_create(user=request.user)
+
+    if request.method == 'POST':
+        leaves_requested = int(request.POST.get('leaves_requested', 1))
+        payment_proof = request.FILES.get('payment_proof')
+        amount_paid = leaves_requested * 10  # €10 per leaf
+
+        LeafRequest.objects.create(
+            user=request.user,
+            leaves_requested=leaves_requested,
+            amount_paid=amount_paid,
+            payment_proof=payment_proof,
+        )
+        messages.success(
+            request, f"Request for {leaves_requested} leaf(ves) submitted! Admin will approve shortly.")
+        return redirect('buy_leaves')
+
+    # Get pending requests
+    pending_requests = LeafRequest.objects.filter(
+        user=request.user, status='pending')
+
+    return render(request, 'scheduling/buy_leaves.html', {
+        'balance': balance,
+        'pending_requests': pending_requests,
+        'revolut_link': 'YOUR_REVOLUT_LINK_HERE',  # ← replace with your Revolut link
+    })
+
+
+@login_required
+def admin_leaves(request):
+    if not request.user.is_superuser:
+        return redirect('class_list')
+
+    pending = LeafRequest.objects.filter(
+        status='pending').order_by('created_at')
+    approved = LeafRequest.objects.filter(
+        status='approved').order_by('-created_at')[:10]
+
+    return render(request, 'scheduling/admin_leaves.html', {
+        'pending': pending,
+        'approved': approved,
+    })
+
+
+@login_required
+def approve_leaf_request(request, request_id):
+    if not request.user.is_superuser:
+        return redirect('class_list')
+
+    leaf_request = get_object_or_404(LeafRequest, id=request_id)
+    leaf_request.approve()
+    messages.success(
+        request, f"Approved {leaf_request.leaves_requested} leaf(ves) for {leaf_request.user.username}!")
+    return redirect('admin_leaves')
+
+
+@login_required
+def reject_leaf_request(request, request_id):
+    if not request.user.is_superuser:
+        return redirect('class_list')
+
+    leaf_request = get_object_or_404(LeafRequest, id=request_id)
+    leaf_request.status = 'rejected'
+    leaf_request.save()
+    messages.warning(
+        request, f"Rejected leaf request for {leaf_request.user.username}.")
+    return redirect('admin_leaves')

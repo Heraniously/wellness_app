@@ -31,4 +31,12 @@ urlpatterns = [
     # Calendar view
     path('calendar/', views.calendar_view, name='calendar'),
     path('api/classes/', views.classes_json, name='classes_json'),
+
+    # Leaf Management
+    path('leaves/', views.buy_leaves, name='buy_leaves'),
+    path('leaves/admin/', views.admin_leaves, name='admin_leaves'),
+    path('leaves/approve/<int:request_id>/',
+         views.approve_leaf_request, name='approve_leaf_request'),
+    path('leaves/reject/<int:request_id>/',
+         views.reject_leaf_request, name='reject_leaf_request'),
 ]
