@@ -38,8 +38,8 @@ class Booking(models.Model):
     is_paid = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     payment_type = models.CharField(max_length=20, choices=[
-        ('leaf', 'Leaf (€10 online)'),
-        ('drop_in', 'Drop-in (€15 in person)'),
+        ('leaf', 'Leaf (online)'),
+        ('drop_in', 'Drop-in (in person)'),
     ], default='drop_in')
     payment_proof = models.CharField(max_length=100, blank=True, null=True)
     amount_paid = models.DecimalField(

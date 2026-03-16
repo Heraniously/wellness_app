@@ -10,7 +10,7 @@
                 <div class="card-body p-4">
                     <h2 class="fw-bold">🍃 Your Leaf Balance</h2>
                     <h1 style="font-size: 4rem; color: var(--zen-sage);">{{ balance.leaves }}</h1>
-                    <p class="text-muted">Each leaf = 1 class booking (€10)</p>
+                    <p class="text-muted">Each leaf = 1 class booking (€{{ leaf_price_eur }})</p>
                 </div>
             </div>
 
@@ -19,14 +19,14 @@
                 <div class="card-body p-4">
                     <h4 class="fw-bold mb-3">🛒 Buy Leaves</h4>
                     <p>Send payment via Revolut to <strong><a href="{{ revolut_link }}" target="_blank">our Revolut</a></strong>, then upload your proof below.</p>
-                    <p class="text-muted">€10 per leaf — leaves never expire</p>
+                    <p class="text-muted">€{{ leaf_price_eur }} per leaf — leaves never expire</p>
 
                     <form method="POST" enctype="multipart/form-data">
                         {% csrf_token %}
                         <div class="mb-3">
                             <label class="form-label fw-bold">How many leaves?</label>
                             <input type="number" name="leaves_requested" class="form-control" min="1" max="20" value="1" required>
-                            <small class="text-muted">Total: <span id="total">€10</span></small>
+                            <small class="text-muted">Total: <span id="total">€{{ leaf_price_eur }}</span></small>
                         </div>
                         <div class="mb-3">
                             <label class="form-label fw-bold">Payment Proof (screenshot)</label>
@@ -59,7 +59,7 @@
 {% block scripts %}
 <script>
 document.querySelector('input[name="leaves_requested"]').addEventListener('input', function() {
-    document.getElementById('total').textContent = '€' + (this.value * 10);
+    document.getElementById('total').textContent = '€' + (this.value * {{ leaf_price_eur }});
 });
 </script>
 {% endblock %}

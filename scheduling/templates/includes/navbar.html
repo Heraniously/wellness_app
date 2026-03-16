@@ -22,7 +22,7 @@
           <a class="nav-link px-3" href="{% url 'class_list' %}">Explore Classes</a>
         </li>
 
-        {% if user.is_authenticated %} {% if user.is_staff %}
+        {% if user.is_authenticated %} {% if user.is_staff and not user.is_superuser %}
         <li class="nav-item">
           <a class="nav-link text-success fw-bold px-3" href="{% url 'instructor_dashboard' %}">Instructor Portal</a>
         </li>
@@ -40,9 +40,11 @@
         </li>
         {% endif %}
 
+        {% if not user.is_superuser %}
         <li class="nav-item">
           <a class="nav-link px-3" href="{% url 'dashboard' %}">My Dashboard</a>
         </li>
+        {% endif %}
 
         <li class="nav-item">
           <a class="nav-link px-3" href="{% url 'calendar' %}">📅 Calendar</a>

@@ -26,7 +26,7 @@ Class Calendar
         <p>
           <strong>📝 Description:</strong> <span id="modalDescription"></span>
         </p>
-        <p><strong>💶 Price:</strong> €<span id="modalPrice"></span></p>
+        <p><strong>🍃 Cost:</strong> 1 leaf</p>
         <p><strong>🪑 Spots left:</strong> <span id="modalSpots"></span></p>
       </div>
       <div class="modal-footer">
@@ -83,7 +83,7 @@ Class Calendar
                     width: 100%;
                    ">
                     <strong>${time}</strong><br>
-                    ${arg.event.title}<br>
+                    ${arg.event.title} <span style="opacity:.9;">• 🍃 1 leaf</span><br>
                     <small style="opacity: 0.85;">${props.instructor}</small>
                    </div>`
         }
@@ -107,7 +107,6 @@ Class Calendar
         document.getElementById("modalInstructor").textContent = props.instructor;
         document.getElementById("modalTime").textContent = timeStr;
         document.getElementById("modalDescription").textContent = props.description;
-        document.getElementById("modalPrice").textContent = props.price;
         document.getElementById("modalSpots").textContent = props.is_full ? "❌ Full" : props.spots_left + " spots available";
 
         const bookBtn = document.getElementById("modalBookBtn");

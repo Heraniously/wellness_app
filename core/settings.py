@@ -90,3 +90,7 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 LOGIN_REDIRECT_URL = 'dashboard'
 LOGOUT_REDIRECT_URL = 'class_list'
+
+# Pricing (avoid hardcoding amounts in views/templates)
+LEAF_PRICE_EUR = 10
+DROP_IN_PRICE_EUR = 15

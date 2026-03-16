@@ -14,6 +14,7 @@ from django.contrib.auth.models import User, Group
 from .forms import ProfessionalSignUpForm
 from decimal import Decimal
 from django.http import JsonResponse
+from django.conf import settings
 
 BUCHAREST = ZoneInfo('Europe/Bucharest')
 
@@ -90,6 +91,7 @@ def client_dashboard(request):
         'past': past,
         'now_plus_24h': now + timedelta(hours=24),
         'leaf_balance': leaf_balance,
+        'leaf_price_eur': settings.LEAF_PRICE_EUR,
     })
 
 
@@ -118,11 +120,11 @@ def finalize_booking(request, class_id):
                 return redirect('buy_leaves')
             balance.leaves -= 1
             balance.save()
-            amount_paid = 10.00
+            amount_paid = settings.LEAF_PRICE_EUR
 
         # Drop-in
         else:
-            amount_paid = 15.00
+            amount_paid = settings.DROP_IN_PRICE_EUR
 
         Booking.objects.create(
             client=request.user,
@@ -138,6 +140,8 @@ def finalize_booking(request, class_id):
     return render(request, 'scheduling/finalize_booking.html', {
         'wellness_class': wellness_class,
         'balance': balance,
+        'leaf_price_eur': settings.LEAF_PRICE_EUR,
+        'drop_in_price_eur': settings.DROP_IN_PRICE_EUR,
     })
 
 
@@ -208,8 +212,8 @@ def instructor_overview(request):
 
 @login_required
 def toggle_payment_status(request, booking_id):
-    # Security: Ensure only instructors can touch payment data
-    if not request.user.is_staff:
+    # Security: Only admins can change payment data
+    if not request.user.is_superuser:
         return redirect('class_list')
 
     booking = get_object_or_404(Booking, id=booking_id)
@@ -251,7 +255,6 @@ def create_class(request):
                 description=request.POST.get('description'),
                 start_time=start_dt + timedelta(weeks=i),
                 end_time=end_dt + timedelta(weeks=i),
-                price=request.POST.get('price'),
                 capacity=request.POST.get('capacity'),
                 instructor=request.user,
                 is_recurring=bool(request.POST.get('is_recurring')),
@@ -293,7 +296,6 @@ def classes_json(request):
             'extendedProps': {
                 'instructor': c.instructor.get_full_name() or c.instructor.username if c.instructor else 'TBA',
                 'description': c.description,
-                'price': str(c.price),
                 'spots_left': spots_left,
                 'is_full': spots_left <= 0,
                 'class_id': c.id,
@@ -312,7 +314,7 @@ def buy_leaves(request):
     if request.method == 'POST':
         leaves_requested = int(request.POST.get('leaves_requested', 1))
         payment_proof = request.FILES.get('payment_proof')
-        amount_paid = leaves_requested * 10  # €10 per leaf
+        amount_paid = leaves_requested * settings.LEAF_PRICE_EUR
 
         LeafRequest.objects.create(
             user=request.user,
@@ -332,6 +334,7 @@ def buy_leaves(request):
         'balance': balance,
         'pending_requests': pending_requests,
         'revolut_link': 'YOUR_REVOLUT_LINK_HERE',  # ← replace with your Revolut link
+        'leaf_price_eur': settings.LEAF_PRICE_EUR,
     })
 
 

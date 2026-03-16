@@ -18,7 +18,7 @@
             <p class="mb-2"><strong>Participants:</strong> {{ class.booking_set.count }} / {{ class.capacity }}</p>
             <table class="table table-sm table-hover">
                 <thead class="table-light">
-                    <tr><th>Client Name</th><th>Payment Status</th></tr>
+                    <tr><th>Client Name</th><th>Payment</th><th>Status</th></tr>
                 </thead>
                 <tbody>
                     {% for booking in class.booking_set.all %}
@@ -28,25 +28,11 @@
                             {{ booking.get_payment_type_display }}
                         </span></td>
                         <td>
-                            <div class="d-flex align-items-center justify-content-between">
-                                {% if booking.is_paid %}
-                                    <span class="badge bg-success">Paid</span>
-                                    <form action="{% url 'toggle_payment_status' booking.id %}" method="post" class="ms-2">
-                                        {% csrf_token %}
-                                        <button type="submit" class="btn btn-sm btn-link text-danger p-0" style="font-size: 0.75rem; text-decoration: none;">
-                                            (Undo)
-                                        </button>
-                                    </form>
-                                {% else %}
-                                    <span class="badge bg-warning text-dark">Pending</span>
-                                    <form action="{% url 'toggle_payment_status' booking.id %}" method="post" class="ms-2">
-                                        {% csrf_token %}
-                                        <button type="submit" class="btn btn-sm btn-success py-0" style="font-size: 0.75rem;">
-                                            Confirm $
-                                        </button>
-                                    </form>
-                                {% endif %}
-                            </div>
+                            {% if booking.is_paid %}
+                                <span class="badge bg-success">Paid</span>
+                            {% else %}
+                                <span class="badge bg-warning text-dark">Pending</span>
+                            {% endif %}
                             {% if booking.payment_proof %}
                                 <div class="x-small text-muted mt-1">Ref: {{ booking.payment_proof }}</div>
                             {% endif %}
@@ -54,7 +40,7 @@
 
                     </tr>
                     {% empty %}
-                    <tr><td colspan="2" class="text-muted small">No bookings yet.</td></tr>
+                    <tr><td colspan="3" class="text-muted small">No bookings yet.</td></tr>
                     {% endfor %}
                 </tbody>
             </table>

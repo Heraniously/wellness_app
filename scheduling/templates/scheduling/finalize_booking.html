@@ -23,23 +23,23 @@
                             <input class="form-check-input" type="radio" name="payment_type" id="leaf" value="leaf" checked>
                             <label class="form-check-label fw-bold" for="leaf">
                                 🍃 Use 1 Leaf 
-                                <span class="text-muted fw-normal">(€10 — you have {{ balance.leaves }} leaf{{ balance.leaves|pluralize }})</span>
+                                <span class="text-muted fw-normal">(€{{ leaf_price_eur }} — you have {{ balance.leaves }} leaf{{ balance.leaves|pluralize }})</span>
                             </label>
                         </div>
                         <div class="form-check p-3 border rounded">
                             <input class="form-check-input" type="radio" name="payment_type" id="drop_in" value="drop_in">
                             <label class="form-check-label fw-bold" for="drop_in">
                                 💵 Pay in Person
-                                <span class="text-muted fw-normal">(€15 at the door)</span>
+                                <span class="text-muted fw-normal">(€{{ drop_in_price_eur }} at the door)</span>
                             </label>
                         </div>
                         {% else %}
                         <div class="alert mb-3" style="background-color: rgba(135,169,107,0.1); border-color: var(--zen-sage);">
-                            <p class="mb-1">🍃 You have no leaves. <a href="{% url 'buy_leaves' %}">Buy leaves for €10 each</a> and save €5 per class!</p>
+                            <p class="mb-1">🍃 You have no leaves. <a href="{% url 'buy_leaves' %}">Buy leaves for €{{ leaf_price_eur }} each</a>.</p>
                         </div>
                         <input type="hidden" name="payment_type" value="drop_in">
                         <div class="p-3 border rounded" style="background-color: var(--zen-cream);">
-                            <p class="fw-bold mb-0">💵 Pay in Person: €15 at the door</p>
+                            <p class="fw-bold mb-0">💵 Pay in Person: €{{ drop_in_price_eur }} at the door</p>
                         </div>
                         {% endif %}
                     </div>
