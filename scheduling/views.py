@@ -152,8 +152,17 @@ def cancel_booking(request, booking_id):
 
     # Check the 24-hour rule
     if booking.wellness_class.start_time > timezone.now() + timedelta(hours=24):
+        # If the user paid with a leaf, refund it before cancelling
+        if booking.payment_type == 'leaf':
+            balance, _ = LeafBalance.objects.get_or_create(user=booking.client)
+            balance.leaves += 1
+            balance.save()
+
         booking.delete()
-        messages.success(request, "Cancellation successful.")
+        messages.success(
+            request,
+            "Cancellation successful. Your leaf has been refunded."
+        )
     else:
         messages.error(
             request, "Cancellation denied: Less than 24h until class.")
