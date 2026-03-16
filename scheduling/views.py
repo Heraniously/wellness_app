@@ -311,6 +311,7 @@ def classes_json(request):
             instructor_colors[instructor_id] = colors[len(
                 instructor_colors) % len(colors)]
 
+        color = instructor_colors[instructor_id]
         spots_left = c.capacity - c.booking_set.count()
 
         events.append({
@@ -318,7 +319,8 @@ def classes_json(request):
             'title': c.title,
             'start': c.start_time.isoformat(),
             'end': c.end_time.isoformat(),
-            'color': instructor_colors[instructor_id],
+            'backgroundColor': color,
+            'borderColor': color,
             'extendedProps': {
                 'instructor': c.instructor.get_full_name() or c.instructor.username if c.instructor else 'TBA',
                 'description': c.description,
@@ -326,6 +328,7 @@ def classes_json(request):
                 'spots_left': spots_left,
                 'is_full': spots_left <= 0,
                 'class_id': c.id,
+                'color': color,
             }
         })
 

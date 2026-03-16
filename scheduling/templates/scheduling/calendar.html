@@ -62,77 +62,88 @@ Class Calendar
     const calendarEl = document.getElementById("calendar");
 
     const calendar = new FullCalendar.Calendar(calendarEl, {
-      initialView: "timeGridWeek",
-      headerToolbar: {
-        left: "prev,next today",
-        center: "title",
-        right: "timeGridWeek,timeGridDay",
-      },
-      height: "auto",
-      allDaySlot: false,
-      slotMinTime: "07:00:00",
-      slotMaxTime: "22:00:00",
-      events: "/api/classes/",
-      eventClick: function (info) {
+    initialView: 'dayGridWeek',
+    firstDay: 1,
+    headerToolbar: {
+        left: 'prev,next today',
+        center: 'title',
+        right: 'dayGridWeek,dayGridMonth'
+    },
+    height: 'auto',
+    events: '/api/classes/',
+
+    eventContent: function(arg) {
+        const props = arg.event.extendedProps;
+        const color = arg.event.backgroundColor;
+        const time = arg.event.start.toLocaleTimeString('en-GB', {
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: true
+        });
+        return {
+            html: `<div style="
+                    padding: 3px 5px; 
+                    font-size: 0.75rem; 
+                    line-height: 1.4; 
+                    cursor: pointer;
+                    white-space: normal;
+                    word-wrap: break-word;
+                    overflow: hidden;
+                    background-color: ${color};
+                    border-radius: 4px;
+                    color: white;
+                    width: 100%;
+                   ">
+                    <strong>${time}</strong><br>
+                    ${arg.event.title}<br>
+                    <small style="opacity: 0.85;">${props.instructor}</small>
+                   </div>`
+        }
+    },
+
+    eventClick: function(info) {
         const props = info.event.extendedProps;
         const start = info.event.start;
         const end = info.event.end;
 
-        // Format time
         const timeStr =
-          start.toLocaleTimeString("en-GB", {
-            hour: "2-digit",
-            minute: "2-digit",
-          }) +
-          " - " +
-          end.toLocaleTimeString("en-GB", {
-            hour: "2-digit",
-            minute: "2-digit",
-          }) +
-          ", " +
-          start.toLocaleDateString("en-GB", {
-            weekday: "long",
-            day: "numeric",
-            month: "long",
-          });
+            start.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" }) +
+            " - " +
+            end.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" }) +
+            ", " +
+            start.toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" });
 
-        // Fill modal
         document.getElementById("modalTitle").textContent = info.event.title;
-        document.getElementById("modalHeader").style.backgroundColor =
-          info.event.backgroundColor;
+        document.getElementById("modalHeader").style.backgroundColor = info.event.backgroundColor;
         document.getElementById("modalHeader").style.color = "white";
-        document.getElementById("modalInstructor").textContent =
-          props.instructor;
+        document.getElementById("modalInstructor").textContent = props.instructor;
         document.getElementById("modalTime").textContent = timeStr;
-        document.getElementById("modalDescription").textContent =
-          props.description;
+        document.getElementById("modalDescription").textContent = props.description;
         document.getElementById("modalPrice").textContent = props.price;
-        document.getElementById("modalSpots").textContent = props.is_full
-          ? "❌ Full"
-          : props.spots_left + " spots available";
+        document.getElementById("modalSpots").textContent = props.is_full ? "❌ Full" : props.spots_left + " spots available";
 
-        // Book button
         const bookBtn = document.getElementById("modalBookBtn");
         if (props.is_full) {
-          bookBtn.textContent = "Class Full";
-          bookBtn.classList.add("disabled");
+            bookBtn.textContent = "Class Full";
+            bookBtn.classList.add("disabled");
         } else {
-          bookBtn.textContent = "Book This Class";
-          bookBtn.classList.remove("disabled");
-          bookBtn.href = "/book/" + props.class_id + "/finalize/";
+            bookBtn.textContent = "Book This Class";
+            bookBtn.classList.remove("disabled");
+            bookBtn.href = "/book/" + props.class_id + "/finalize/";
         }
 
-        // Show modal
         new bootstrap.Modal(document.getElementById("classModal")).show();
-      },
-      eventDidMount: function (info) {
-        // Add spots remaining as tooltip
+    },
+
+    eventDidMount: function(info) {
         const spots = info.event.extendedProps.spots_left;
         info.el.title = spots <= 0 ? "Full" : spots + " spots left";
-      },
-    });
+    },
+});
 
-    calendar.render();
+calendar.render();
+    
+    
   });
 </script>
 {% endblock %}

@@ -254,3 +254,64 @@ h1, h2, h3, h4, h5 {
     color: var(--zen-charcoal);
     font-weight: 700;
 }
+
+/* FullCalendar Fixes */
+.fc-daygrid-event {
+    white-space: normal !important;
+    overflow: visible !important;
+    background: none !important;
+    border: none !important;
+}
+
+.fc-event-main {
+    overflow: visible !important;
+    padding: 0 !important;
+}
+
+.fc-daygrid-event-harness {
+    margin-bottom: 2px !important;
+}
+
+.fc-daygrid-day-events {
+    overflow: visible !important;
+}
+
+/* Calendar container styling to match Zen theme */
+.fc {
+    font-family: 'Noto Sans', sans-serif !important;
+    color: var(--zen-charcoal) !important;
+}
+
+.fc-toolbar-title {
+    font-family: 'Montserrat', sans-serif !important;
+    color: var(--zen-charcoal) !important;
+}
+
+.fc-button {
+    background-color: var(--zen-sage) !important;
+    border-color: var(--zen-sage) !important;
+    border-radius: 12px !important;
+}
+
+.fc-button:hover {
+    background-color: #6D8B56 !important;
+    border-color: #6D8B56 !important;
+}
+
+.fc-button-active {
+    background-color: var(--zen-charcoal) !important;
+    border-color: var(--zen-charcoal) !important;
+}
+
+.fc-col-header-cell {
+    background-color: var(--zen-cream) !important;
+    font-family: 'Montserrat', sans-serif !important;
+}
+
+.fc-daygrid-day {
+    background-color: var(--zen-beige) !important;
+}
+
+.fc-day-today {
+    background-color: rgba(135, 169, 107, 0.1) !important;
+}
