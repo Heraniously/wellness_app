@@ -324,6 +324,15 @@ def calendar_view(request):
 def classes_json(request):
     classes = WellnessClass.objects.filter(start_time__gt=timezone.now())
 
+    user_booked_ids = set()
+    if request.user.is_authenticated:
+        user_booked_ids = set(
+            Booking.objects.filter(
+                client=request.user,
+                wellness_class__in=classes,
+            ).values_list('wellness_class_id', flat=True)
+        )
+
     # Assign a color per instructor
     instructor_colors = {}
     colors = ['#6d8b74', '#e07a5f', '#3d405b', '#81b29a', '#f2cc8f', '#a8dadc']
@@ -352,6 +361,7 @@ def classes_json(request):
                 'is_full': spots_left <= 0,
                 'class_id': c.id,
                 'color': color,
+                'user_has_booked': c.id in user_booked_ids,
             }
         })
 

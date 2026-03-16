@@ -33,6 +33,9 @@ Class Calendar
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
           Close
         </button>
+        <span id="modalAlreadyBooked" class="badge bg-success d-none">
+          Already Booked ✅
+        </span>
         <a href="#" id="modalBookBtn" class="btn text-white" style="background-color: #6d8b74">
           Book This Class
         </a>
@@ -63,6 +66,7 @@ Class Calendar
       eventContent: function (arg) {
         const props = arg.event.extendedProps;
         const color = arg.event.backgroundColor;
+        const opacity = props.user_has_booked ? 0.4 : 1;
         const time = arg.event.start.toLocaleTimeString('en-GB', {
           hour: '2-digit',
           minute: '2-digit',
@@ -81,9 +85,10 @@ Class Calendar
                     border-radius: 4px;
                     color: white;
                     width: 100%;
+                    opacity: ${opacity};
                    ">
                     <strong>${time}</strong><br>
-                    ${arg.event.title} <span style="opacity:.9;">• 🍃 1 leaf</span><br>
+                    ${arg.event.title}<br>
                     <small style="opacity: 0.85;">${props.instructor}</small>
                    </div>`
         }
@@ -110,6 +115,16 @@ Class Calendar
         document.getElementById("modalSpots").textContent = props.is_full ? "❌ Full" : props.spots_left + " spots available";
 
         const bookBtn = document.getElementById("modalBookBtn");
+        const alreadyBooked = document.getElementById("modalAlreadyBooked");
+
+        if (props.user_has_booked) {
+          bookBtn.classList.add("d-none");
+          alreadyBooked.classList.remove("d-none");
+        } else {
+          bookBtn.classList.remove("d-none");
+          alreadyBooked.classList.add("d-none");
+        }
+
         if (props.is_full) {
           bookBtn.textContent = "Class Full";
           bookBtn.classList.add("disabled");
