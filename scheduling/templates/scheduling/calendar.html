@@ -129,7 +129,7 @@ Class Calendar
         } else {
             bookBtn.textContent = "Book This Class";
             bookBtn.classList.remove("disabled");
-            bookBtn.href = "/book/" + props.class_id + "/finalize/";
+            bookBtn.href = "/finalize-booking/" + props.class_id + "/";
         }
 
         new bootstrap.Modal(document.getElementById("classModal")).show();

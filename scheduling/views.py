@@ -72,20 +72,8 @@ def class_list(request):
     })
 
 
-@login_required
 def book_session(request, class_id):
-    # 1. Find the specific class the user wants to join
-    wellness_class = get_object_or_404(WellnessClass, id=class_id)
-
-    # 2. Create the booking record in the database
-    # This automatically tracks who is coming for the instructor
-    Booking.objects.get_or_create(
-        client=request.user,
-        wellness_class=wellness_class
-    )
-
-    # 3. Send them back to the class list
-    return redirect('class_list')
+    return redirect('finalize_booking', class_id=class_id)
 
 
 @login_required
