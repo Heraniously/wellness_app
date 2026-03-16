@@ -333,3 +333,32 @@ h1, h2, h3, h4, h5 {
 .fc-day-today {
     background-color: rgba(135, 169, 107, 0.1) !important;
 }
+
+/* List view styling for Zen theme */
+.fc-list {
+    background-color: var(--zen-beige) !important;
+}
+
+.fc-list-table {
+    border-radius: 16px;
+    overflow: hidden;
+}
+
+.fc-list-day-cushion {
+    background-color: var(--zen-cream) !important;
+    color: var(--zen-charcoal) !important;
+    font-family: 'Montserrat', sans-serif !important;
+    font-weight: 600;
+}
+
+.fc-list-event {
+    background-color: var(--zen-beige) !important;
+}
+
+.fc-list-event:hover td {
+    background-color: rgba(135, 169, 107, 0.08) !important;
+}
+
+.fc-list-event td {
+    border-color: rgba(0, 0, 0, 0.03) !important;
+}
