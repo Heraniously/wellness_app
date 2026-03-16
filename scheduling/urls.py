@@ -9,7 +9,6 @@ urlpatterns = [
     # Note: success.html is rendered INSIDE finalize_booking, so no separate URL is needed
     path('finalize-booking/<int:class_id>/',
          views.finalize_booking, name='finalize_booking'),
-    path('book/<int:class_id>/', views.book_session, name='book_session'),
 
     # Dashboard & Profile
     path('dashboard/', views.client_dashboard, name='dashboard'),

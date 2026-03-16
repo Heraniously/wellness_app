@@ -4,14 +4,12 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib.admin.views.decorators import staff_member_required
 from .models import WellnessClass, Booking, LeafBalance, LeafRequest
-from django.contrib.auth.forms import UserCreationForm
 from django.urls import reverse_lazy
 from django.views import generic
 from django.utils import timezone
 from zoneinfo import ZoneInfo
 from datetime import timedelta, datetime
 from django.contrib import messages
-from django import forms
 from django.contrib.auth.models import User, Group
 from .forms import ProfessionalSignUpForm
 from decimal import Decimal
@@ -39,9 +37,10 @@ class SignUpView(generic.CreateView):
                 name='Instructor')
             user.groups.add(instructor_group)
 
-            # Give them 'Staff status' so they can log into the dashboard
-            user.is_staff = True
-            user.save()
+            messages.info(
+                self.request,
+                "Thanks! Your instructor account is pending admin approval."
+            )
 
         return super().form_valid(form)
 
@@ -71,10 +70,6 @@ def class_list(request):
         'classes': classes,
         'user_booked_ids': user_booked_ids
     })
-
-
-def book_session(request, class_id):
-    return redirect('finalize_booking', class_id=class_id)
 
 
 @login_required
@@ -226,35 +221,6 @@ def toggle_payment_status(request, booking_id):
     status = "verified" if booking.is_paid else "marked as unpaid"
     messages.info(request, f"Payment for {booking.client.username} {status}.")
     return redirect('instructor_dashboard')
-
-
-class ExtendedSignUpForm(UserCreationForm):
-    first_name = forms.CharField(max_length=30, required=True)
-    last_name = forms.CharField(max_length=30, required=True)
-    email = forms.EmailField(required=True)
-    role = forms.ChoiceField(
-        choices=[('client', 'Practitioner'), ('instructor', 'Teacher')])
-
-    class Meta(UserCreationForm.Meta):
-        fields = UserCreationForm.Meta.fields + \
-            ('first_name', 'last_name', 'email')
-
-    def save(self, commit=True):
-        user = super().save(commit=False)
-        user.first_name = self.cleaned_data['first_name']
-        user.last_name = self.cleaned_data['last_name']
-        user.email = self.cleaned_data['email']
-        if commit:
-            user.save()
-            # Automatically assign to Group
-            group_name = 'Instructors' if self.cleaned_data['role'] == 'instructor' else 'Clients'
-            group, created = Group.objects.get_or_create(name=group_name)
-            user.groups.add(group)
-            if self.cleaned_data['role'] == 'instructor':
-                user.is_staff = True  # Give them staff status for instructor views
-                user.save()
-        return user
-
 
 @staff_member_required
 def create_class(request):
