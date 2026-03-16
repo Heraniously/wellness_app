@@ -3,7 +3,7 @@ from urllib import request
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib.admin.views.decorators import staff_member_required
-from .models import WellnessClass, Booking, LeafBalance, LeafRequest
+from .models import WellnessClass, Booking, LeafBalance, LeafRequest, Post, Comment, Like
 from django.urls import reverse_lazy
 from django.views import generic
 from django.utils import timezone
@@ -13,8 +13,9 @@ from django.contrib import messages
 from django.contrib.auth.models import User, Group
 from .forms import ProfessionalSignUpForm
 from decimal import Decimal
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponseForbidden
 from django.conf import settings
+from django.db.models import Count
 
 BUCHAREST = ZoneInfo('Europe/Bucharest')
 
@@ -73,9 +74,15 @@ def class_list(request):
     })
 
 
-@login_required
 def client_dashboard(request):
     now = timezone.now()
+    if not request.user.is_authenticated:
+        # Logged-out dashboard: welcome + CTAs
+        return render(request, 'scheduling/dashboard.html', {
+            'is_guest': True,
+        })
+
+    # Logged-in: compute upcoming/past, streak, totals, favorite class type
     upcoming = Booking.objects.filter(
         client=request.user,
         wellness_class__start_time__gt=now
@@ -86,12 +93,57 @@ def client_dashboard(request):
     )
     leaf_balance, _ = LeafBalance.objects.get_or_create(user=request.user)
 
+    # Total attended classes
+    total_attended = past.count()
+
+    # Favorite class type (by title)
+    favorite_class = (
+        past.values('wellness_class__title')
+        .annotate(c=Count('id'))
+        .order_by('-c')
+        .first()
+    )
+    favorite_class_title = favorite_class['wellness_class__title'] if favorite_class else None
+
+    # Weekly streak: consecutive calendar weeks with >=1 booking
+    week_set = set()
+    for booking in past:
+        dt = booking.wellness_class.start_time
+        year, week, _ = dt.isocalendar()
+        week_set.add((year, week))
+
+    if week_set:
+        current_year, current_week, _ = now.isocalendar()
+        streak = 0
+        year, week = current_year, current_week
+        while (year, week) in week_set:
+            streak += 1
+            week -= 1
+            if week == 0:
+                year -= 1
+                week = 52
+    else:
+        streak = 0
+
+    # Instructor section: upcoming classes they teach
+    instructor_classes = []
+    if request.user.is_staff:
+        instructor_classes = WellnessClass.objects.filter(
+            instructor=request.user,
+            start_time__gt=now
+        ).order_by('start_time')
+
     return render(request, 'scheduling/dashboard.html', {
+        'is_guest': False,
         'upcoming': upcoming,
         'past': past,
         'now_plus_24h': now + timedelta(hours=24),
         'leaf_balance': leaf_balance,
         'leaf_price_eur': settings.LEAF_PRICE_EUR,
+        'total_attended': total_attended,
+        'favorite_class_title': favorite_class_title,
+        'streak_weeks': streak,
+        'instructor_classes': instructor_classes,
     })
 
 
@@ -304,6 +356,130 @@ def classes_json(request):
         })
 
     return JsonResponse(events, safe=False)
+
+
+def _login_prompt(request, title, message, next_url_name):
+    return render(request, 'scheduling/login_prompt.html', {
+        'prompt_title': title,
+        'prompt_message': message,
+        'next_url_name': next_url_name,
+    })
+
+
+@login_required
+def community_feed(request):
+    posts = Post.objects.select_related('user').prefetch_related('comments__user', 'likes')
+    user_likes = set(
+        Like.objects.filter(user=request.user, post__in=posts).values_list('post_id', flat=True)
+    )
+
+    if request.method == 'POST':
+        text = request.POST.get('text', '').strip()
+        if text:
+            today = timezone.now().date()
+            already_posted = Post.objects.filter(user=request.user, created_at__date=today).exists()
+            if already_posted:
+                messages.error(request, "You can only share one mindful moment per day.")
+            else:
+                Post.objects.create(user=request.user, text=text)
+                messages.success(request, "Your mindful moment has been shared.")
+                return redirect('community')
+
+    return render(request, 'scheduling/community.html', {
+        'posts': posts,
+        'user_likes': user_likes,
+    })
+
+
+def community(request):
+    if not request.user.is_authenticated:
+        return _login_prompt(
+            request,
+            "Join the Community",
+            "Log in or sign up to share mindful moments and connect with others.",
+            'community',
+        )
+    return community_feed(request)
+
+
+@login_required
+def create_post(request):
+    if request.method != 'POST':
+        return redirect('community')
+    text = request.POST.get('text', '').strip()
+    if text:
+        today = timezone.now().date()
+        already_posted = Post.objects.filter(user=request.user, created_at__date=today).exists()
+        if already_posted:
+            messages.error(request, "You can only share one mindful moment per day.")
+        else:
+            Post.objects.create(user=request.user, text=text)
+            messages.success(request, "Your mindful moment has been shared.")
+    return redirect('community')
+
+
+@login_required
+def delete_post(request, post_id):
+    post = get_object_or_404(Post, id=post_id)
+    if not (request.user == post.user or request.user.is_superuser):
+        return HttpResponseForbidden()
+    if request.method == 'POST':
+        post.delete()
+        messages.info(request, "Post deleted.")
+    return redirect('community')
+
+
+@login_required
+def toggle_like(request, post_id):
+    if request.method != 'POST':
+        return redirect('community')
+    post = get_object_or_404(Post, id=post_id)
+    like, created = Like.objects.get_or_create(user=request.user, post=post)
+    if not created:
+        like.delete()
+    return redirect('community')
+
+
+@login_required
+def delete_comment(request, comment_id):
+    comment = get_object_or_404(Comment, id=comment_id)
+    if not (request.user == comment.user or request.user.is_superuser):
+        return HttpResponseForbidden()
+    if request.method == 'POST':
+        comment.delete()
+        messages.info(request, "Comment deleted.")
+    return redirect('community')
+
+
+@login_required
+def settings_view(request):
+    if request.method == 'POST' and request.POST.get('action') == 'update_email':
+        new_email = request.POST.get('email', '').strip()
+        if new_email:
+            request.user.email = new_email
+            request.user.save()
+            messages.success(request, "Email updated.")
+
+    leaf_balance, _ = LeafBalance.objects.get_or_create(user=request.user)
+    leaf_requests = LeafRequest.objects.filter(user=request.user).order_by('-created_at')[:20]
+
+    teaching_classes = []
+    if request.user.is_staff:
+        teaching_classes = WellnessClass.objects.filter(
+            instructor=request.user,
+            start_time__gt=timezone.now()
+        ).order_by('start_time')
+
+    pending_leaf_count = 0
+    if request.user.is_superuser:
+        pending_leaf_count = LeafRequest.objects.filter(status='pending').count()
+
+    return render(request, 'scheduling/settings.html', {
+        'leaf_balance': leaf_balance,
+        'leaf_requests': leaf_requests,
+        'teaching_classes': teaching_classes,
+        'pending_leaf_count': pending_leaf_count,
+    })
 
 
 # Purchasing leaves

@@ -1,67 +1,133 @@
 {% extends 'base.html' %}
 {% block content %}
-<h3 class="mb-4">My Upcoming Sessions</h3>
-<div class="row">
+{% if is_guest %}
+  <div class="d-flex flex-column align-items-center text-center" style="min-height: 70vh; justify-content: center;">
+    <h2 class="mb-3">Welcome to Zen Room</h2>
+    <p class="text-muted mb-4 px-3">
+      Book yoga classes, track your leaves, and share mindful moments with the community.
+    </p>
+    <div class="w-100 px-3">
+      <a href="{% url 'class_list' %}" class="btn btn-primary w-100 mb-2">Explore Classes</a>
+      <a href="{% url 'login' %}" class="btn btn-outline-secondary w-100 mb-2">Log In</a>
+      <a href="{% url 'signup' %}" class="btn btn-outline-secondary w-100">Sign Up</a>
+    </div>
+  </div>
+{% else %}
+  <h3 class="mb-3">My Dashboard</h3>
+
+  <!-- Stats row -->
+  <div class="row mb-3">
+    <div class="col-6 mb-3">
+      <div class="card border-0 shadow-sm">
+        <div class="card-body text-center py-3">
+          <div class="small text-muted">Streak</div>
+          <div class="fw-bold" style="font-size: 1.4rem;">{{ streak_weeks }} wk</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 mb-3">
+      <div class="card border-0 shadow-sm">
+        <div class="card-body text-center py-3">
+          <div class="small text-muted">Total Classes</div>
+          <div class="fw-bold" style="font-size: 1.4rem;">{{ total_attended }}</div>
+        </div>
+      </div>
+    </div>
+    {% if favorite_class_title %}
+    <div class="col-12 mb-3">
+      <div class="card border-0 shadow-sm">
+        <div class="card-body py-3">
+          <div class="small text-muted">Favourite Class</div>
+          <div class="fw-bold">{{ favorite_class_title }}</div>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Leaf balance -->
+  <div class="card mb-4">
+    <div class="card-body p-3">
+      <div class="d-flex justify-content-between align-items-center">
+        <div>
+          <h5 class="fw-bold mb-1">🍃 Your Leaves</h5>
+          <p class="text-muted mb-0">1 leaf = 1 class (€{{ leaf_price_eur }})</p>
+        </div>
+        <div class="text-center">
+          <h1 style="font-size: 2.5rem; color: var(--zen-sage);">{{ leaf_balance.leaves }}</h1>
+        </div>
+      </div>
+      <a href="{% url 'buy_leaves' %}" class="btn btn-primary w-100 mt-3">Buy More Leaves</a>
+    </div>
+  </div>
+
+  <!-- Upcoming bookings -->
+  <h5 class="mb-2">Upcoming Sessions</h5>
+  <div class="mb-4">
     {% for booking in upcoming %}
-    <div class="col-md-6 mb-4">
-        <div class="card shadow-sm border-0 h-100">
-            <div class="card-body d-flex flex-column">
-                <h5 class="card-title text-primary">{{ booking.wellness_class.title }}</h5>
-                <p class="mb-1"><strong>Instructor:</strong> {{ booking.wellness_class.instructor.get_full_name|default:booking.wellness_class.instructor.username }}</p>
-                <p class="mb-1"><strong>Time:</strong> {{ booking.wellness_class.start_time|date:"D, M d @ H:i" }}</p>
-                <p><span class="badge {% if booking.is_paid %}bg-success{% else %}bg-info{% endif %}">{{ booking.get_payment_type_display }}</span></p>
-
-                <div class="mt-auto pt-3">
-                    {% if booking.wellness_class.start_time > now_plus_24h %}
-                        <form action="{% url 'cancel_booking' booking.id %}" method="post">
-                            {% csrf_token %}
-                            <button type="submit" class="btn btn-outline-danger btn-sm w-100"
-                                    onclick="return confirm('Are you sure you want to cancel this booking?')">
-                                Cancel Booking
-                            </button>
-                        </form>
-                    {% else %}
-                        <div class="alert alert-warning py-1 px-2 mb-0 small text-center">
-                            Cancellatio n locked (starts in < 24h)
-                        </div>
-                    {% endif %}
-                </div>
+      <div class="card shadow-sm border-0 mb-2">
+        <div class="card-body">
+          <h6 class="fw-bold mb-1">{{ booking.wellness_class.title }}</h6>
+          <p class="mb-1 small"><strong>Instructor:</strong> {{ booking.wellness_class.instructor.get_full_name|default:booking.wellness_class.instructor.username }}</p>
+          <p class="mb-1 small"><strong>Time:</strong> {{ booking.wellness_class.start_time|date:"D, M d @ H:i" }}</p>
+          <p class="mb-2">
+            <span class="badge {% if booking.is_paid %}bg-success{% else %}bg-info{% endif %}">
+              {{ booking.get_payment_type_display }}
+            </span>
+          </p>
+          {% if booking.wellness_class.start_time > now_plus_24h %}
+            <form action="{% url 'cancel_booking' booking.id %}" method="post">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-outline-danger btn-sm w-100"
+                      onclick="return confirm('Are you sure you want to cancel this booking?')">
+                Cancel Booking
+              </button>
+            </form>
+          {% else %}
+            <div class="alert alert-warning py-1 px-2 mb-0 small text-center">
+              Cancellation locked (starts in &lt; 24h)
             </div>
+          {% endif %}
         </div>
-    </div>
+      </div>
     {% empty %}
-    <p class="text-muted">You have no upcoming sessions.</p>
+      <p class="text-muted small">You have no upcoming sessions.</p>
     {% endfor %}
-</div>
+  </div>
 
-<!-- Leaf Balance Section -->
-<div class="card mb-4">
-    <div class="card-body p-4">
-        <div class="d-flex justify-content-between align-items-center">
-            <div>
-                <h4 class="fw-bold mb-1">🍃 Your Leaves</h4>
-                <p class="text-muted mb-0">1 leaf = 1 class booking (€{{ leaf_price_eur }})</p>
-            </div>
-            <div class="text-center">
-                <h1 style="font-size: 3rem; color: var(--zen-sage);">{{ leaf_balance.leaves }}</h1>
-            </div>
+  <!-- Instructor section -->
+  {% if instructor_classes %}
+  <h5 class="mb-2">Teaching This Week</h5>
+  <div class="mb-4">
+    {% for cls in instructor_classes %}
+      <div class="card shadow-sm border-0 mb-2">
+        <div class="card-body py-2">
+          <div class="d-flex justify-content-between">
+            <span class="small fw-bold">{{ cls.title }}</span>
+            <span class="small text-muted">{{ cls.start_time|date:"D, M d @ H:i" }}</span>
+          </div>
+          <div class="small text-muted">
+            {{ cls.booking_set.count }} / {{ cls.capacity }} booked
+          </div>
         </div>
-        <a href="{% url 'buy_leaves' %}" class="btn btn-primary w-100 mt-3">Buy More Leaves</a>
-    </div>
-</div>
+      </div>
+    {% endfor %}
+  </div>
+  {% endif %}
 
-<hr class="my-5">
-<h4 class="text-muted">My Class History</h4>
-<div class="row">
-    {% for booking in past %}
-    <div class="col-md-4 mb-3">
-        <div class="card bg-light border-0 opacity-75">
-            <div class="card-body py-2">
-                <p class="mb-0 small"><strong>{{ booking.wellness_class.title }}</strong></p>
-                <p class="mb-0 x-small">{{ booking.wellness_class.start_time|date:"M d, Y" }}</p>
-            </div>
+  <!-- Past history (compact) -->
+  <h6 class="text-muted mb-2">Recent Classes</h6>
+  <div class="row">
+    {% for booking in past|slice:":6" %}
+    <div class="col-6 mb-2">
+      <div class="card bg-light border-0">
+        <div class="card-body py-2">
+          <p class="mb-0 small"><strong>{{ booking.wellness_class.title }}</strong></p>
+          <p class="mb-0 x-small text-muted">{{ booking.wellness_class.start_time|date:"M d, Y" }}</p>
         </div>
+      </div>
     </div>
     {% endfor %}
-</div>
+  </div>
+{% endif %}
 {% endblock %}

@@ -31,6 +31,16 @@ urlpatterns = [
     path('calendar/', views.calendar_view, name='calendar'),
     path('api/classes/', views.classes_json, name='classes_json'),
 
+    # Community
+    path('community/', views.community, name='community'),
+    path('community/post/', views.create_post, name='create_post'),
+    path('community/post/<int:post_id>/delete/', views.delete_post, name='delete_post'),
+    path('community/post/<int:post_id>/like/', views.toggle_like, name='toggle_like'),
+    path('community/comment/<int:comment_id>/delete/', views.delete_comment, name='delete_comment'),
+
+    # Settings hub
+    path('settings/', views.settings_view, name='settings'),
+
     # Leaf Management
     path('leaves/', views.buy_leaves, name='buy_leaves'),
     path('leaves/admin/', views.admin_leaves, name='admin_leaves'),

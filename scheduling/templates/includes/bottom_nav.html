@@ -1,0 +1,22 @@
+{% load static %}
+{% with current=request.resolver_match.url_name %}
+<nav class="zen-bottom-nav">
+  <a href="{% url 'dashboard' %}" class="zen-tab {% if current == 'dashboard' %}active{% endif %}">
+    <span class="zen-tab-icon">📊</span>
+    <span class="zen-tab-label">Dashboard</span>
+  </a>
+  <a href="{% url 'calendar' %}" class="zen-tab {% if current == 'calendar' %}active{% endif %}">
+    <span class="zen-tab-icon">📅</span>
+    <span class="zen-tab-label">Book</span>
+  </a>
+  <a href="{% url 'community' %}" class="zen-tab {% if current == 'community' %}active{% endif %}">
+    <span class="zen-tab-icon">💬</span>
+    <span class="zen-tab-label">Community</span>
+  </a>
+  <a href="{% url 'settings' %}" class="zen-tab {% if current == 'settings' %}active{% endif %}">
+    <span class="zen-tab-icon">⚙️</span>
+    <span class="zen-tab-label">Settings</span>
+  </a>
+</nav>
+{% endwith %}
+

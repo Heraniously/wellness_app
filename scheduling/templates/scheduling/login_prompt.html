@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="d-flex flex-column align-items-center text-center" style="min-height: 70vh; justify-content: center;">
+  <h3 class="mb-2">{{ prompt_title }}</h3>
+  <p class="text-muted mb-4 px-3">{{ prompt_message }}</p>
+  <div class="w-100 px-3">
+    <a href="{% url 'login' %}" class="btn btn-primary w-100 mb-2">Log In</a>
+    <a href="{% url 'signup' %}" class="btn btn-outline-secondary w-100">Sign Up</a>
+  </div>
+</div>
+{% endblock %}
+

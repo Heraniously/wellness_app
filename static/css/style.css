@@ -12,7 +12,7 @@
 /* Global Styles */
 body {
     background-color: var(--zen-beige) !important;
-    padding: 90px 20px 50px 20px; /* This creates the 'margin' below the fixed navbar */
+    padding: 16px 16px 80px 16px; /* space for content + bottom nav on mobile */
     color: var(--zen-charcoal) !important;
     font-family: 'Noto Sans', sans-serif;
 }
@@ -22,32 +22,50 @@ h1, h2, h3, h4, h5 {
     color: var(--zen-charcoal);
 }
 
-/* Navbar Fix: Force dark text on light background */
-.navbar {
-    background-color: var(--zen-cream) !important;
-    border-bottom: 1px solid rgba(0,0,0,0.05);
-    padding: 15px 20px;
-}
-.navbar-nav{
-    gap: 20px;
-    padding: 50px 20px;
-}
-
-.navbar-brand, .nav-link {
-    color: var(--zen-charcoal) !important;
-    font-weight: 600 !important;
-    padding: 0px;
-}
-
-.nav-link {
-    border-radius: 12px;
-    padding: 08px 30px;
-    transition: color 0.3s ease;
+/* Bottom mobile nav */
+.zen-bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 64px;
+    background-color: var(--zen-cream);
+    border-top: 1px solid rgba(0, 0, 0, 0.05);
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    padding: 4px 0;
+    z-index: 999;
 }
 
-.nav-link:hover {
-    background-color: var(--zen-sage);
-    color: var(--zen-beige) !important;
+.zen-tab {
+    flex: 1;
+    text-align: center;
+    text-decoration: none;
+    color: var(--zen-charcoal);
+    font-size: 0.75rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+}
+
+.zen-tab-icon {
+    font-size: 1.2rem;
+}
+
+.zen-tab-label {
+    font-size: 0.7rem;
+}
+
+.zen-tab.active {
+    color: var(--zen-sage);
+    font-weight: 600;
+}
+
+.zen-tab.active .zen-tab-icon {
+    transform: translateY(-1px);
 }
 
 /* Sage Green Primary Buttons (Replacing Blue) */
@@ -94,7 +112,7 @@ h1, h2, h3, h4, h5 {
 
 .container{
     padding: 0px;
-    }
+}
 
 /* Container that holds everything */
 .video-background-container {
