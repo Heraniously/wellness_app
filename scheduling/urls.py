@@ -2,7 +2,7 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
-    path('', views.client_dashboard, name='home'),
+    path('', views.dashboard, name='home'),
     path('classes/', views.class_list, name='class_list'),
 
     # Booking Workflow
@@ -11,7 +11,7 @@ urlpatterns = [
          views.finalize_booking, name='finalize_booking'),
 
     # Dashboard & Profile
-    path('dashboard/', views.client_dashboard, name='dashboard'),
+    path('dashboard/', views.dashboard, name='dashboard'),
     path('signup/', views.SignUpView.as_view(), name='signup'),
 
     # Instructor Features
@@ -40,6 +40,12 @@ urlpatterns = [
 
     # Settings hub
     path('settings/', views.settings_view, name='settings'),
+
+    # Teaching hub (instructors only)
+    path('teaching/', views.teaching_hub, name='teaching'),
+
+    # Admin hub (superusers only)
+    path('admin-hub/', views.admin_hub, name='admin_hub'),
 
     # Leaf Management
     path('leaves/', views.buy_leaves, name='buy_leaves'),

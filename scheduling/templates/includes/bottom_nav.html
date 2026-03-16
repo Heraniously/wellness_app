@@ -1,7 +1,7 @@
 {% load static %}
 {% with current=request.resolver_match.url_name %}
 <nav class="zen-bottom-nav">
-  <a href="{% url 'dashboard' %}" class="zen-tab {% if current == 'dashboard' %}active{% endif %}">
+  <a href="{% url 'dashboard' %}" class="zen-tab {% if current == 'dashboard' or current == 'home' %}active{% endif %}">
     <span class="zen-tab-icon">📊</span>
     <span class="zen-tab-label">Dashboard</span>
   </a>
@@ -13,6 +13,19 @@
     <span class="zen-tab-icon">💬</span>
     <span class="zen-tab-label">Community</span>
   </a>
+
+  {% if user.is_authenticated and user.is_staff and not user.is_superuser %}
+  <a href="{% url 'teaching' %}" class="zen-tab {% if current == 'teaching' %}active{% endif %}">
+    <span class="zen-tab-icon">📚</span>
+    <span class="zen-tab-label">Teaching</span>
+  </a>
+  {% elif user.is_authenticated and user.is_superuser %}
+  <a href="{% url 'admin_hub' %}" class="zen-tab {% if current == 'admin_hub' %}active{% endif %}">
+    <span class="zen-tab-icon">🛠️</span>
+    <span class="zen-tab-label">Admin</span>
+  </a>
+  {% endif %}
+
   <a href="{% url 'settings' %}" class="zen-tab {% if current == 'settings' %}active{% endif %}">
     <span class="zen-tab-icon">⚙️</span>
     <span class="zen-tab-label">Settings</span>

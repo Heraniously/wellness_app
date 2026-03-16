@@ -15,7 +15,7 @@ from .forms import ProfessionalSignUpForm
 from decimal import Decimal
 from django.http import JsonResponse, HttpResponseForbidden
 from django.conf import settings
-from django.db.models import Count
+from django.db.models import Count, Sum
 
 BUCHAREST = ZoneInfo('Europe/Bucharest')
 
@@ -74,7 +74,7 @@ def class_list(request):
     })
 
 
-def client_dashboard(request):
+def dashboard(request):
     now = timezone.now()
     if not request.user.is_authenticated:
         # Logged-out dashboard: welcome + CTAs
@@ -125,14 +125,6 @@ def client_dashboard(request):
     else:
         streak = 0
 
-    # Instructor section: upcoming classes they teach
-    instructor_classes = []
-    if request.user.is_staff:
-        instructor_classes = WellnessClass.objects.filter(
-            instructor=request.user,
-            start_time__gt=now
-        ).order_by('start_time')
-
     return render(request, 'scheduling/dashboard.html', {
         'is_guest': False,
         'upcoming': upcoming,
@@ -143,7 +135,121 @@ def client_dashboard(request):
         'total_attended': total_attended,
         'favorite_class_title': favorite_class_title,
         'streak_weeks': streak,
-        'instructor_classes': instructor_classes,
+    })
+
+
+@login_required
+def teaching_hub(request):
+    if not request.user.is_staff or request.user.is_superuser:
+        return redirect('dashboard')
+
+    now = timezone.now()
+
+    upcoming_classes = WellnessClass.objects.filter(
+        instructor=request.user,
+        start_time__gt=now
+    ).order_by('start_time')
+
+    past_classes = WellnessClass.objects.filter(
+        instructor=request.user,
+        start_time__lte=now
+    ).order_by('-start_time')[:20]
+
+    taught_bookings = Booking.objects.filter(
+        wellness_class__instructor=request.user
+    )
+    this_month_bookings = taught_bookings.filter(
+        wellness_class__start_time__year=now.year,
+        wellness_class__start_time__month=now.month,
+    )
+
+    students_this_month = this_month_bookings.values('client').distinct().count()
+    total_classes_taught = taught_bookings.values('wellness_class_id').distinct().count()
+
+    revenue_generated = taught_bookings.aggregate(total=Sum('amount_paid'))['total'] or 0
+
+    popular_class = (
+        taught_bookings.values('wellness_class__title')
+        .annotate(c=Count('id'))
+        .order_by('-c')
+        .first()
+    )
+    popular_class_title = popular_class['wellness_class__title'] if popular_class else None
+
+    no_show_count = taught_bookings.filter(
+        is_paid=False,
+        wellness_class__start_time__lte=now
+    ).count()
+    total_past_bookings = taught_bookings.filter(
+        wellness_class__start_time__lte=now
+    ).count() or 1
+    no_show_rate = round((no_show_count / total_past_bookings) * 100, 1)
+
+    teaching_stats = {
+        'students_this_month': students_this_month,
+        'total_classes_taught': total_classes_taught,
+        'revenue_generated': revenue_generated,
+        'popular_class_title': popular_class_title,
+        'no_show_rate': no_show_rate,
+    }
+
+    return render(request, 'scheduling/teaching.html', {
+        'upcoming_classes': upcoming_classes,
+        'past_classes': past_classes,
+        'teaching_stats': teaching_stats,
+    })
+
+
+@login_required
+def admin_hub(request):
+    if not request.user.is_superuser:
+        return redirect('dashboard')
+
+    now = timezone.now()
+    all_bookings = Booking.objects.all()
+    this_month_bookings = all_bookings.filter(
+        wellness_class__start_time__year=now.year,
+        wellness_class__start_time__month=now.month,
+    )
+
+    total_revenue = all_bookings.aggregate(total=Sum('amount_paid'))['total'] or 0
+    total_bookings_this_month = this_month_bookings.count()
+
+    popular_class = (
+        all_bookings.values('wellness_class__title')
+        .annotate(c=Count('id'))
+        .order_by('-c')
+        .first()
+    )
+    popular_class_title = popular_class['wellness_class__title'] if popular_class else None
+
+    most_active = (
+        all_bookings.values('client__username')
+        .annotate(c=Count('id'))
+        .order_by('-c')
+        .first()
+    )
+    most_active_username = most_active['client__username'] if most_active else None
+
+    per_teacher = (
+        all_bookings.values('wellness_class__instructor__username')
+        .annotate(c=Count('id'))
+        .order_by('-c')
+    )
+
+    pending_leaf_requests = LeafRequest.objects.filter(status='pending').count()
+
+    admin_stats = {
+        'total_revenue': total_revenue,
+        'total_bookings_this_month': total_bookings_this_month,
+        'popular_class_title': popular_class_title,
+        'most_active_username': most_active_username,
+        'per_teacher': per_teacher,
+        'pending_leaf_requests': pending_leaf_requests,
+    }
+
+    return render(request, 'scheduling/admin_hub.html', {
+        'admin_stats': admin_stats,
     })
 
 
