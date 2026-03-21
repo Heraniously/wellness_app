@@ -54,6 +54,20 @@ def home(request):
     return render(request, 'scheduling/home.html')
 
 
+def logged_out_landing(request):
+    classes = WellnessClass.objects.filter(
+        start_time__gt=timezone.now()
+    ).select_related('instructor').order_by('start_time')[:4]
+
+    for c in classes:
+        c.spots_left = c.capacity - c.booking_set.count()
+        c.is_full = c.spots_left <= 0
+
+    return render(request, 'scheduling/logged_out_landing.html', {
+        'classes': classes,
+    })
+
+
 def class_list(request):
     # This gets all classes to show to the clients
     classes = WellnessClass.objects.filter(

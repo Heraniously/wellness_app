@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="py-3">
+  <div
+    class="mb-4 rounded-4 d-flex flex-column justify-content-center"
+    style="background:
+      radial-gradient(circle at 50% 42%, rgba(135,169,107,0.34) 0%, rgba(135,169,107,0.19) 32%, rgba(135,169,107,0.08) 54%, rgba(135,169,107,0.0) 76%),
+      linear-gradient(180deg, rgba(255,253,208,0.62) 0%, rgba(255,253,208,0.34) 100%);
+      border: 1px solid rgba(135,169,107,0.16);
+      min-height: 320px;
+      padding: 72px 24px;"
+  >
+    <h1 class="page-title mb-3" style="max-width: 18ch; line-height: 1.25;">
+      Find your classes and enjoy your mindful day
+    </h1>
+    <p class="muted mb-4" style="max-width: 38ch;">
+      Explore upcoming sessions and sign in to reserve your spot.
+    </p>
+
+    <div class="d-flex gap-2 mt-1">
+      <a href="{% url 'login' %}" class="btn btn-primary w-100">Log In</a>
+      <a href="{% url 'signup' %}" class="btn btn-outline-secondary w-100">Sign Up</a>
+    </div>
+  </div>
+
+  <h2 class="section-title">Upcoming Classes</h2>
+  {% for class in classes %}
+  <div class="card mb-2">
+    <div class="card-body py-2">
+      <div class="fw-bold">{{ class.title }}</div>
+      <div class="small muted">
+        {{ class.start_time|date:"D, M d @ H:i" }}
+      </div>
+      <div class="small">
+        <strong>Instructor:</strong>
+        {% if class.instructor %}
+          {{ class.instructor.get_full_name|default:class.instructor.username }}
+        {% else %}
+          TBA
+        {% endif %}
+      </div>
+      <div class="small muted">
+        {% if class.is_full %}Fully booked{% else %}{{ class.spots_left }} spots left{% endif %}
+      </div>
+    </div>
+  </div>
+  {% empty %}
+  <p class="small muted">No classes available yet.</p>
+  {% endfor %}
+</div>
+{% endblock %}
+

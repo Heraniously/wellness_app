@@ -90,7 +90,7 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 LOGIN_REDIRECT_URL = 'dashboard'
-LOGOUT_REDIRECT_URL = 'class_list'
+LOGOUT_REDIRECT_URL = 'logged_out_landing'
 
 # Pricing (avoid hardcoding amounts in views/templates)
 LEAF_PRICE_EUR = 10

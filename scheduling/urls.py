@@ -3,6 +3,7 @@ from . import views
 
 urlpatterns = [
     path('', views.dashboard, name='home'),
+    path('welcome/', views.logged_out_landing, name='logged_out_landing'),
     path('classes/', views.class_list, name='class_list'),
 
     # Booking Workflow
