@@ -597,6 +597,19 @@ def settings_view(request):
             request.user.save()
             messages.success(request, "Email updated.")
 
+    if request.method == 'POST' and request.POST.get('action') == 'update_username':
+        new_username = (request.POST.get('username') or '').strip()
+        if not new_username:
+            messages.error(request, "Username cannot be empty.")
+        elif new_username == request.user.username:
+            messages.info(request, "Username is unchanged.")
+        elif User.objects.filter(username__iexact=new_username).exclude(id=request.user.id).exists():
+            messages.error(request, "That username is already taken.")
+        else:
+            request.user.username = new_username
+            request.user.save()
+            messages.success(request, "Username updated.")
+
     if request.method == 'POST' and request.POST.get('action') == 'update_touch_preference':
         touch_preference = request.POST.get('touch_preference')
         if touch_preference in {'yes', 'no', 'ask'}:
