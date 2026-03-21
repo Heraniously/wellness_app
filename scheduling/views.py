@@ -125,6 +125,16 @@ def dashboard(request):
     else:
         streak = 0
 
+    local_hour = now.astimezone(BUCHAREST).hour
+    if local_hour < 12:
+        greeting_prefix = "Good morning"
+    elif local_hour < 18:
+        greeting_prefix = "Good afternoon"
+    else:
+        greeting_prefix = "Good evening"
+
+    greeting_name = request.user.first_name.strip() if request.user.first_name else request.user.username
+
     return render(request, 'scheduling/dashboard.html', {
         'is_guest': False,
         'upcoming': upcoming,
@@ -135,6 +145,8 @@ def dashboard(request):
         'total_attended': total_attended,
         'favorite_class_title': favorite_class_title,
         'streak_weeks': streak,
+        'greeting_prefix': greeting_prefix,
+        'greeting_name': greeting_name,
     })
 
 
