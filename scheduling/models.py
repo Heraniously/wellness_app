@@ -44,9 +44,32 @@ class Booking(models.Model):
     payment_proof = models.CharField(max_length=100, blank=True, null=True)
     amount_paid = models.DecimalField(
         max_digits=6, decimal_places=2, default=0.00)
+    note = models.TextField(max_length=300, blank=True)
 
     def __str__(self):
         return f"{self.client.username} - {self.wellness_class.title} ({self.payment_type})"
+
+
+class UserProfile(models.Model):
+    TOUCH_PREFERENCE_CHOICES = [
+        ('yes', 'Yes'),
+        ('no', 'No'),
+        ('ask', 'Ask me first'),
+    ]
+
+    user = models.OneToOneField(
+        User,
+        on_delete=models.CASCADE,
+        related_name='profile'
+    )
+    touch_preference = models.CharField(
+        max_length=10,
+        choices=TOUCH_PREFERENCE_CHOICES,
+        default='ask'
+    )
+
+    def __str__(self):
+        return f"{self.user.username} profile"
 
 # Tracks how many leaves each user has
 

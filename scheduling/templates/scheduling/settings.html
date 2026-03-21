@@ -19,6 +19,30 @@
     </div>
   </div>
 
+  <!-- My Preferences -->
+  <h2 class="section-title">My Preferences</h2>
+  <div class="settings-group">
+    <form method="post" class="w-100">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="update_touch_preference">
+      <div class="settings-row">
+        <div class="settings-label">Touch preference</div>
+        <div class="settings-value" style="max-width: 60%;">
+          <select name="touch_preference" class="form-select form-select-sm">
+            {% for value, label in touch_choices %}
+              <option value="{{ value }}" {% if profile.touch_preference == value %}selected{% endif %}>
+                {{ label }}
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+      <div class="settings-row">
+        <button type="submit" class="btn btn-primary btn-sm w-100">Save Preference</button>
+      </div>
+    </form>
+  </div>
+
   <div class="settings-group">
     <form method="post" class="w-100">
       {% csrf_token %}

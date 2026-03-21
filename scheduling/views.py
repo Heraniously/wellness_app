@@ -3,7 +3,7 @@ from urllib import request
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib.admin.views.decorators import staff_member_required
-from .models import WellnessClass, Booking, LeafBalance, LeafRequest, Post, Comment, Like
+from .models import WellnessClass, Booking, LeafBalance, LeafRequest, Post, Comment, Like, UserProfile
 from django.urls import reverse_lazy
 from django.views import generic
 from django.utils import timezone
@@ -209,6 +209,11 @@ def teaching_hub(request):
         'upcoming_classes': upcoming_classes,
         'past_classes': past_classes,
         'teaching_stats': teaching_stats,
+        'touch_icons': {
+            'yes': '🤝',
+            'no': '🚫',
+            'ask': '❓',
+        },
     })
 
 
@@ -272,6 +277,7 @@ def finalize_booking(request, class_id):
 
     if request.method == "POST":
         payment_type = request.POST.get('payment_type')
+        note = (request.POST.get('note') or '').strip()
 
         # Capacity check
         if wellness_class.booking_set.count() >= wellness_class.capacity:
@@ -302,6 +308,7 @@ def finalize_booking(request, class_id):
             payment_type=payment_type,
             amount_paid=amount_paid,
             is_paid=True if payment_type == 'leaf' else False,
+            note=note,
         )
         return render(request, 'scheduling/success.html', {
             'wellness_class': wellness_class
@@ -581,12 +588,21 @@ def delete_comment(request, comment_id):
 
 @login_required
 def settings_view(request):
+    profile, _ = UserProfile.objects.get_or_create(user=request.user)
+
     if request.method == 'POST' and request.POST.get('action') == 'update_email':
         new_email = request.POST.get('email', '').strip()
         if new_email:
             request.user.email = new_email
             request.user.save()
             messages.success(request, "Email updated.")
+
+    if request.method == 'POST' and request.POST.get('action') == 'update_touch_preference':
+        touch_preference = request.POST.get('touch_preference')
+        if touch_preference in {'yes', 'no', 'ask'}:
+            profile.touch_preference = touch_preference
+            profile.save()
+            messages.success(request, "Touch preference updated.")
 
     leaf_balance, _ = LeafBalance.objects.get_or_create(user=request.user)
     leaf_requests = LeafRequest.objects.filter(user=request.user).order_by('-created_at')[:20]
@@ -607,6 +623,8 @@ def settings_view(request):
         'leaf_requests': leaf_requests,
         'teaching_classes': teaching_classes,
         'pending_leaf_count': pending_leaf_count,
+        'profile': profile,
+        'touch_choices': UserProfile.TOUCH_PREFERENCE_CHOICES,
     })
 
 

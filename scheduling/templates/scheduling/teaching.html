@@ -72,14 +72,25 @@
           <thead class="table-light small">
             <tr>
               <th>Student</th>
+              <th>Touch</th>
               <th>Payment</th>
               <th>Status</th>
+              <th>Note</th>
             </tr>
           </thead>
           <tbody class="small">
             {% for booking in cls.booking_set.all %}
             <tr>
               <td>{{ booking.client.get_full_name|default:booking.client.username }}</td>
+              <td>
+                {% if booking.client.profile.touch_preference == 'yes' %}
+                  {{ touch_icons.yes }}
+                {% elif booking.client.profile.touch_preference == 'no' %}
+                  {{ touch_icons.no }}
+                {% else %}
+                  {{ touch_icons.ask }}
+                {% endif %}
+              </td>
               <td>{{ booking.get_payment_type_display }}</td>
               <td>
                 {% if booking.is_paid %}
@@ -88,6 +99,7 @@
                   <span class="badge bg-warning text-dark">Pending</span>
                 {% endif %}
               </td>
+              <td class="text-muted">{{ booking.note|default:"—" }}</td>
             </tr>
             {% endfor %}
           </tbody>
