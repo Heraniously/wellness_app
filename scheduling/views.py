@@ -83,6 +83,14 @@ def dashboard(request):
         })
 
     # Logged-in: compute upcoming/past, streak, totals, favorite class type
+    local_hour = timezone.localtime(now).hour
+    if local_hour < 12:
+        greeting = "Good morning"
+    elif local_hour < 18:
+        greeting = "Good afternoon"
+    else:
+        greeting = "Good evening"
+
     upcoming = Booking.objects.filter(
         client=request.user,
         wellness_class__start_time__gt=now
@@ -127,6 +135,7 @@ def dashboard(request):
 
     return render(request, 'scheduling/dashboard.html', {
         'is_guest': False,
+        'greeting': greeting,
         'upcoming': upcoming,
         'past': past,
         'now_plus_24h': now + timedelta(hours=24),
