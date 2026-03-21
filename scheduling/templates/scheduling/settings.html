@@ -52,6 +52,82 @@
     </form>
   </div>
 
+  <h2 class="section-title">Safety & Health</h2>
+  <div class="settings-group">
+    <form method="post" class="w-100">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="update_profile_preferences">
+
+      <div class="settings-row" style="align-items: flex-start;">
+        <div class="settings-label">Long-term conditions</div>
+        <div class="settings-value" style="max-width: 60%;">
+          <textarea name="long_term_conditions" rows="2" maxlength="500" class="form-control form-control-sm">{{ profile.long_term_conditions }}</textarea>
+        </div>
+      </div>
+
+      <div class="settings-row" style="align-items: flex-start;">
+        <div class="settings-label">Movement limitations</div>
+        <div class="settings-value" style="max-width: 60%;">
+          <textarea name="movement_limitations" rows="2" maxlength="500" class="form-control form-control-sm">{{ profile.movement_limitations }}</textarea>
+        </div>
+      </div>
+
+      <div class="settings-row" style="align-items: flex-start;">
+        <div class="settings-label">Practice goal</div>
+        <div class="settings-value" style="max-width: 60%;">
+          <select name="practice_goal" class="form-select form-select-sm">
+            <option value="">Select</option>
+            {% for value, label in practice_goal_choices %}
+              <option value="{{ value }}" {% if profile.practice_goal == value %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+
+      <div class="settings-row" style="align-items: flex-start;">
+        <div class="settings-label">Intensity preference</div>
+        <div class="settings-value" style="max-width: 60%;">
+          <select name="intensity_preference" class="form-select form-select-sm">
+            <option value="">Select</option>
+            {% for value, label in intensity_choices %}
+              <option value="{{ value }}" {% if profile.intensity_preference == value %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+
+      <div class="settings-row" style="align-items: flex-start;">
+        <div class="settings-label">Adjustment preference</div>
+        <div class="settings-value" style="max-width: 60%;">
+          <select name="adjustment_preference" class="form-select form-select-sm">
+            <option value="">Select</option>
+            {% for value, label in adjustment_choices %}
+              <option value="{{ value }}" {% if profile.adjustment_preference == value %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+
+      <div class="settings-row" style="align-items: flex-start;">
+        <div class="settings-label">Extra instructor notes</div>
+        <div class="settings-value" style="max-width: 60%;">
+          <textarea name="instructor_notes" rows="2" maxlength="300" class="form-control form-control-sm">{{ profile.instructor_notes }}</textarea>
+        </div>
+      </div>
+
+      <div class="settings-row">
+        <label class="settings-label mb-0">
+          <input type="checkbox" name="consent_share_health_info" {% if profile.consent_share_health_info %}checked{% endif %}>
+          I agree instructors may view this information to support safe practice
+        </label>
+      </div>
+
+      <div class="settings-row">
+        <button type="submit" class="btn btn-primary btn-sm w-100">Save Health & Practice Profile</button>
+      </div>
+    </form>
+  </div>
+
   <div class="settings-group">
     <form method="post" class="w-100">
       {% csrf_token %}

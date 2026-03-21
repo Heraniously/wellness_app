@@ -8,9 +8,16 @@
             <h3 class="text-center mb-4">Client Login</h3>
             <form method="post">
                 {% csrf_token %}
+                {% if form.non_field_errors %}
+                <div class="alert alert-warning py-2 small" role="alert">
+                    {% for error in form.non_field_errors %}
+                        <div>{{ error }}</div>
+                    {% endfor %}
+                </div>
+                {% endif %}
                 <div class="mb-3">
                     <label class="form-label">Username</label>
-                    <input type="text" name="username" class="form-control" required>
+                    <input type="text" name="username" class="form-control" value="{{ request.POST.username|default:'' }}" required>
                 </div>
                 <div class="mb-3">
                     <label class="form-label">Password</label>

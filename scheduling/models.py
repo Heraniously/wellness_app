@@ -67,6 +67,46 @@ class UserProfile(models.Model):
         choices=TOUCH_PREFERENCE_CHOICES,
         default='ask'
     )
+    long_term_conditions = models.TextField(max_length=500, blank=True)
+    movement_limitations = models.TextField(max_length=500, blank=True)
+
+    PRACTICE_GOAL_CHOICES = [
+        ('stress_relief', 'Stress relief'),
+        ('mobility', 'Mobility'),
+        ('strength', 'Strength'),
+        ('pain_management', 'Pain management'),
+        ('recovery', 'Recovery'),
+    ]
+    practice_goal = models.CharField(
+        max_length=20,
+        choices=PRACTICE_GOAL_CHOICES,
+        blank=True
+    )
+
+    INTENSITY_PREFERENCE_CHOICES = [
+        ('gentle', 'Gentle'),
+        ('moderate', 'Moderate'),
+        ('dynamic', 'Dynamic'),
+    ]
+    intensity_preference = models.CharField(
+        max_length=12,
+        choices=INTENSITY_PREFERENCE_CHOICES,
+        blank=True
+    )
+
+    ADJUSTMENT_PREFERENCE_CHOICES = [
+        ('ask_each_class', 'Ask each class'),
+        ('verbal_only', 'Verbal only'),
+        ('hands_off', 'Hands-off'),
+    ]
+    adjustment_preference = models.CharField(
+        max_length=20,
+        choices=ADJUSTMENT_PREFERENCE_CHOICES,
+        blank=True
+    )
+
+    instructor_notes = models.TextField(max_length=300, blank=True)
+    consent_share_health_info = models.BooleanField(default=False)
 
     def __str__(self):
         return f"{self.user.username} profile"

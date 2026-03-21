@@ -76,6 +76,7 @@
               <th>Payment</th>
               <th>Status</th>
               <th>Note</th>
+              <th>Profile</th>
             </tr>
           </thead>
           <tbody class="small">
@@ -100,6 +101,25 @@
                 {% endif %}
               </td>
               <td class="text-muted">{{ booking.note|default:"—" }}</td>
+              <td>
+                <button
+                  type="button"
+                  class="btn btn-outline-secondary btn-sm js-student-profile-btn"
+                  data-bs-toggle="modal"
+                  data-bs-target="#studentProfileModal"
+                  data-student-name="{{ booking.client.get_full_name|default:booking.client.username }}"
+                  data-touch-preference="{{ booking.client.profile.get_touch_preference_display|default:'Not set' }}"
+                  data-consent-share-health-info="{% if booking.client.profile.consent_share_health_info %}1{% else %}0{% endif %}"
+                  data-long-term-conditions="{{ booking.client.profile.long_term_conditions|default:'' }}"
+                  data-movement-limitations="{{ booking.client.profile.movement_limitations|default:'' }}"
+                  data-practice-goal="{{ booking.client.profile.get_practice_goal_display|default:'' }}"
+                  data-intensity-preference="{{ booking.client.profile.get_intensity_preference_display|default:'' }}"
+                  data-adjustment-preference="{{ booking.client.profile.get_adjustment_preference_display|default:'' }}"
+                  data-instructor-notes="{{ booking.client.profile.instructor_notes|default:'' }}"
+                >
+                  View
+                </button>
+              </td>
             </tr>
             {% endfor %}
           </tbody>
@@ -133,5 +153,73 @@
     <p class="small text-muted mb-0">No past classes yet.</p>
   {% endfor %}
 </div>
+
+<div class="modal fade" id="studentProfileModal" tabindex="-1" aria-labelledby="studentProfileModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="studentProfileModalLabel">Student Profile</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body small">
+        <div class="mb-2"><strong>Name:</strong> <span id="profileStudentName">—</span></div>
+        <div class="mb-2"><strong>Touch preference:</strong> <span id="profileTouchPreference">—</span></div>
+        <div id="profileHealthInfo">
+          <div class="mb-2"><strong>Long-term conditions:</strong> <span id="profileLongTermConditions">—</span></div>
+          <div class="mb-2"><strong>Movement limitations:</strong> <span id="profileMovementLimitations">—</span></div>
+          <div class="mb-2"><strong>Practice goal:</strong> <span id="profilePracticeGoal">—</span></div>
+          <div class="mb-2"><strong>Intensity preference:</strong> <span id="profileIntensityPreference">—</span></div>
+          <div class="mb-2"><strong>Adjustment preference:</strong> <span id="profileAdjustmentPreference">—</span></div>
+          <div class="mb-0"><strong>Instructor notes:</strong> <span id="profileInstructorNotes">—</span></div>
+        </div>
+        <div id="profileNoConsentMessage" class="text-muted d-none">No health info shared.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  (function () {
+    function textOrFallback(value) {
+      return value && value.trim() ? value.trim() : '—';
+    }
+
+    const buttons = document.querySelectorAll('.js-student-profile-btn');
+    const studentNameEl = document.getElementById('profileStudentName');
+    const touchPreferenceEl = document.getElementById('profileTouchPreference');
+    const longTermConditionsEl = document.getElementById('profileLongTermConditions');
+    const movementLimitationsEl = document.getElementById('profileMovementLimitations');
+    const practiceGoalEl = document.getElementById('profilePracticeGoal');
+    const intensityPreferenceEl = document.getElementById('profileIntensityPreference');
+    const adjustmentPreferenceEl = document.getElementById('profileAdjustmentPreference');
+    const instructorNotesEl = document.getElementById('profileInstructorNotes');
+    const healthInfoEl = document.getElementById('profileHealthInfo');
+    const noConsentEl = document.getElementById('profileNoConsentMessage');
+
+    buttons.forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        const ds = btn.dataset;
+        const hasConsent = ds.consentShareHealthInfo === '1';
+
+        studentNameEl.textContent = textOrFallback(ds.studentName);
+        touchPreferenceEl.textContent = textOrFallback(ds.touchPreference);
+
+        if (hasConsent) {
+          healthInfoEl.classList.remove('d-none');
+          noConsentEl.classList.add('d-none');
+          longTermConditionsEl.textContent = textOrFallback(ds.longTermConditions);
+          movementLimitationsEl.textContent = textOrFallback(ds.movementLimitations);
+          practiceGoalEl.textContent = textOrFallback(ds.practiceGoal);
+          intensityPreferenceEl.textContent = textOrFallback(ds.intensityPreference);
+          adjustmentPreferenceEl.textContent = textOrFallback(ds.adjustmentPreference);
+          instructorNotesEl.textContent = textOrFallback(ds.instructorNotes);
+        } else {
+          healthInfoEl.classList.add('d-none');
+          noConsentEl.classList.remove('d-none');
+        }
+      });
+    });
+  })();
+</script>
 {% endblock %}
 

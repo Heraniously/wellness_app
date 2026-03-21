@@ -11,6 +11,7 @@ from zoneinfo import ZoneInfo
 from datetime import timedelta, datetime
 from django.contrib import messages
 from django.contrib.auth.models import User, Group
+from django.contrib.auth.views import LoginView
 from .forms import ProfessionalSignUpForm
 from decimal import Decimal
 from django.http import JsonResponse, HttpResponseForbidden
@@ -21,6 +22,25 @@ from django.core.cache import cache
 from itertools import groupby
 
 BUCHAREST = ZoneInfo('Europe/Bucharest')
+
+
+class PendingAwareLoginView(LoginView):
+    template_name = 'registration/login.html'
+
+    def form_valid(self, form):
+        user = form.get_user()
+        is_pending_instructor = (
+            user.groups.filter(name='Instructor').exists()
+            and not user.is_staff
+            and not user.is_superuser
+        )
+        if is_pending_instructor:
+            form.add_error(
+                None,
+                "Your instructor account is pending admin approval. Please wait for confirmation."
+            )
+            return self.form_invalid(form)
+        return super().form_valid(form)
 
 
 class SignUpView(generic.CreateView):
@@ -177,6 +197,8 @@ def teaching_hub(request):
     upcoming_classes = WellnessClass.objects.filter(
         instructor=request.user,
         start_time__gt=now
+    ).prefetch_related(
+        'booking_set__client__profile'
     ).order_by('start_time')
 
     past_classes = WellnessClass.objects.filter(
@@ -699,6 +721,33 @@ def settings_view(request):
             profile.save()
             messages.success(request, "Touch preference updated.")
 
+    if request.method == 'POST' and request.POST.get('action') == 'update_profile_preferences':
+        profile.long_term_conditions = (request.POST.get('long_term_conditions') or '').strip()
+        profile.movement_limitations = (request.POST.get('movement_limitations') or '').strip()
+
+        practice_goal = request.POST.get('practice_goal', '')
+        if practice_goal in dict(UserProfile.PRACTICE_GOAL_CHOICES):
+            profile.practice_goal = practice_goal
+        else:
+            profile.practice_goal = ''
+
+        intensity_preference = request.POST.get('intensity_preference', '')
+        if intensity_preference in dict(UserProfile.INTENSITY_PREFERENCE_CHOICES):
+            profile.intensity_preference = intensity_preference
+        else:
+            profile.intensity_preference = ''
+
+        adjustment_preference = request.POST.get('adjustment_preference', '')
+        if adjustment_preference in dict(UserProfile.ADJUSTMENT_PREFERENCE_CHOICES):
+            profile.adjustment_preference = adjustment_preference
+        else:
+            profile.adjustment_preference = ''
+
+        profile.instructor_notes = (request.POST.get('instructor_notes') or '').strip()
+        profile.consent_share_health_info = request.POST.get('consent_share_health_info') == 'on'
+        profile.save()
+        messages.success(request, "Preferences updated.")
+
     leaf_balance, _ = LeafBalance.objects.get_or_create(user=request.user)
     leaf_requests = LeafRequest.objects.filter(user=request.user).order_by('-created_at')[:20]
 
@@ -720,6 +769,9 @@ def settings_view(request):
         'pending_leaf_count': pending_leaf_count,
         'profile': profile,
         'touch_choices': UserProfile.TOUCH_PREFERENCE_CHOICES,
+        'practice_goal_choices': UserProfile.PRACTICE_GOAL_CHOICES,
+        'intensity_choices': UserProfile.INTENSITY_PREFERENCE_CHOICES,
+        'adjustment_choices': UserProfile.ADJUSTMENT_PREFERENCE_CHOICES,
     })
 
 
