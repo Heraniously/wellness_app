@@ -29,6 +29,7 @@ urlpatterns = [
 
     # Calendar view
     path('calendar/', views.calendar_view, name='calendar'),
+    path('calendar/month/', views.calendar_month_view, name='calendar_month'),
     path('api/classes/', views.classes_json, name='classes_json'),
 
     # Community

@@ -1,0 +1,163 @@
+{% extends 'base.html' %}
+{% block title %}
+Class Calendar
+{% endblock %}
+{% block content %}
+<div class="container-fluid py-4">
+  <div class="btn-group w-100 mb-3">
+    <a href="{% url 'calendar' %}" class="btn btn-sm btn-outline-secondary">List</a>
+    <a href="{% url 'calendar_month' %}" class="btn btn-sm btn-primary">Month</a>
+  </div>
+  <h2 class="fw-bold text-center mb-4" style="color: #6d8b74">
+    Class Schedule
+  </h2>
+  <div id="calendar-loading" class="d-flex justify-content-center align-items-center py-4">
+    <div class="spinner-border text-success" role="status">
+      <span class="visually-hidden">Loading...</span>
+    </div>
+  </div>
+  <div id="calendar" class="d-none"></div>
+</div>
+
+<!-- Class Detail Modal -->
+<div class="modal fade" id="classModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header" id="modalHeader">
+        <h5 class="modal-title fw-bold" id="modalTitle"></h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <p><strong>Instructor:</strong> <span id="modalInstructor"></span></p>
+        <p><strong>Time:</strong> <span id="modalTime"></span></p>
+        <p><strong>Description:</strong> <span id="modalDescription"></span></p>
+        <p><strong>Cost:</strong> 1 leaf</p>
+        <p><strong>Spots left:</strong> <span id="modalSpots"></span></p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+          Close
+        </button>
+        <span id="modalAlreadyBooked" class="badge bg-success d-none">
+          Already Booked ✅
+        </span>
+        <a href="#" id="modalBookBtn" class="btn text-white" style="background-color: #6d8b74">
+          Book This Class
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<link href="https://cdn.jsdelivr.net/npm/@fullcalendar/core@6.1.10/index.global.min.css" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/@fullcalendar/core@6.1.10/index.global.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@fullcalendar/daygrid@6.1.10/index.global.min.js"></script>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const calendarEl = document.getElementById("calendar");
+    const loadingEl = document.getElementById("calendar-loading");
+
+    const calendar = new FullCalendar.Calendar(calendarEl, {
+      initialView: 'dayGridMonth',
+      firstDay: 1,
+      headerToolbar: {
+        left: 'prev,next today',
+        center: 'title',
+        right: 'dayGridMonth'
+      },
+      height: 'auto',
+      events: function(fetchInfo, successCallback, failureCallback) {
+        const params = new URLSearchParams({
+          start: fetchInfo.startStr,
+          end: fetchInfo.endStr,
+        });
+        fetch(`/api/classes/?${params.toString()}`)
+          .then((response) => response.json())
+          .then((data) => successCallback(data))
+          .catch((error) => failureCallback(error));
+      },
+      eventContent: function (arg) {
+        const props = arg.event.extendedProps;
+        const color = arg.event.backgroundColor;
+        const opacity = props.user_has_booked ? 0.4 : 0.85;
+        const time = arg.event.start.toLocaleTimeString('en-GB', {
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: true
+        });
+
+        return {
+          html: `<div style="
+              padding: 3px 5px;
+              font-size: 0.75rem;
+              line-height: 1.2;
+              cursor: pointer;
+              background-color: ${color};
+              border-radius: 4px;
+              color: white;
+              width: 100%;
+              opacity: ${opacity};
+            ">
+              <strong>${time}</strong><br>
+              ${arg.event.title}<br>
+              <small style="opacity: 0.85;">${props.instructor}</small>
+            </div>`
+        };
+      },
+      eventClick: function (info) {
+        const props = info.event.extendedProps;
+        const start = info.event.start;
+        const end = info.event.end;
+
+        const timeStr =
+          start.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" }) +
+          " - " +
+          end.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" }) +
+          ", " +
+          start.toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" });
+
+        document.getElementById("modalTitle").textContent = info.event.title;
+        document.getElementById("modalHeader").style.backgroundColor = info.event.backgroundColor;
+        document.getElementById("modalHeader").style.color = "white";
+        document.getElementById("modalInstructor").textContent = props.instructor;
+        document.getElementById("modalTime").textContent = timeStr;
+        document.getElementById("modalDescription").textContent = props.description;
+        document.getElementById("modalSpots").textContent = props.is_full ? "Full" : props.spots_left + " spots available";
+
+        const bookBtn = document.getElementById("modalBookBtn");
+        const alreadyBooked = document.getElementById("modalAlreadyBooked");
+
+        if (props.user_has_booked) {
+          bookBtn.classList.add("d-none");
+          alreadyBooked.classList.remove("d-none");
+        } else {
+          bookBtn.classList.remove("d-none");
+          alreadyBooked.classList.add("d-none");
+        }
+
+        if (props.is_full) {
+          bookBtn.textContent = "Class Full";
+          bookBtn.classList.add("disabled");
+        } else {
+          bookBtn.textContent = "Book This Class";
+          bookBtn.classList.remove("disabled");
+          bookBtn.href = "/finalize-booking/" + props.class_id + "/";
+        }
+
+        new bootstrap.Modal(document.getElementById("classModal")).show();
+      },
+    });
+
+    calendar.render();
+
+    if (loadingEl) {
+      loadingEl.classList.add('d-none');
+    }
+    calendarEl.classList.remove('d-none');
+  });
+</script>
+{% endblock %}
+

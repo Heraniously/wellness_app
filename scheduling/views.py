@@ -16,6 +16,9 @@ from decimal import Decimal
 from django.http import JsonResponse, HttpResponseForbidden
 from django.conf import settings
 from django.db.models import Count, Sum
+from django.utils.dateparse import parse_datetime
+from django.core.cache import cache
+from itertools import groupby
 
 BUCHAREST = ZoneInfo('Europe/Bucharest')
 
@@ -443,11 +446,75 @@ def create_class(request):
 
 
 def calendar_view(request):
-    return render(request, 'scheduling/calendar.html')
+    classes = WellnessClass.objects.filter(
+        start_time__gt=timezone.now()
+    ).select_related('instructor').annotate(
+        bookings_count=Count('booking')
+    ).order_by('start_time')
+
+    user_booked_ids = set()
+    if request.user.is_authenticated:
+        user_booked_ids = set(
+            Booking.objects.filter(
+                client=request.user,
+                wellness_class__in=classes,
+            ).values_list('wellness_class_id', flat=True)
+        )
+
+    instructor_colors = {}
+    colors = ['#6d8b74', '#e07a5f', '#3d405b', '#81b29a', '#f2cc8f', '#a8dadc']
+    for c in classes:
+        instructor_id = c.instructor_id
+        if instructor_id not in instructor_colors:
+            instructor_colors[instructor_id] = colors[len(instructor_colors) % len(colors)]
+        c.color = instructor_colors[instructor_id]
+        c.spots_left = c.capacity - c.bookings_count
+        c.is_full = c.spots_left <= 0
+        c.user_has_booked = c.id in user_booked_ids
+
+    grouped_classes = []
+    for day, day_classes in groupby(classes, key=lambda item: item.start_time.date()):
+        grouped_classes.append((day, list(day_classes)))
+
+    return render(request, 'scheduling/calendar.html', {
+        'grouped_classes': grouped_classes,
+        'active_view': 'list',
+    })
+
+
+def calendar_month_view(request):
+    return render(request, 'scheduling/calendar_month.html', {
+        'active_view': 'month',
+    })
 
 
 def classes_json(request):
-    classes = WellnessClass.objects.filter(start_time__gt=timezone.now())
+    start_param = request.GET.get('start', '')
+    end_param = request.GET.get('end', '')
+    user_key = f"user:{request.user.id}" if request.user.is_authenticated else "anon"
+    cache_key = f"classes_json:{start_param}:{end_param}:{user_key}"
+    cached_data = cache.get(cache_key)
+    if cached_data is not None:
+        return JsonResponse(cached_data, safe=False)
+
+    classes = WellnessClass.objects.select_related('instructor').annotate(
+        bookings_count=Count('booking')
+    )
+
+    # FullCalendar passes the visible range as start/end.
+    # Limit the payload to the requested window for better performance.
+    start_dt = parse_datetime(start_param) if start_param else None
+    end_dt = parse_datetime(end_param) if end_param else None
+
+    if start_dt and timezone.is_naive(start_dt):
+        start_dt = timezone.make_aware(start_dt, BUCHAREST)
+    if end_dt and timezone.is_naive(end_dt):
+        end_dt = timezone.make_aware(end_dt, BUCHAREST)
+
+    if start_dt and end_dt:
+        classes = classes.filter(start_time__gte=start_dt, start_time__lt=end_dt)
+    else:
+        classes = classes.filter(start_time__gt=timezone.now())
 
     user_booked_ids = set()
     if request.user.is_authenticated:
@@ -470,7 +537,7 @@ def classes_json(request):
                 instructor_colors) % len(colors)]
 
         color = instructor_colors[instructor_id]
-        spots_left = c.capacity - c.booking_set.count()
+        spots_left = c.capacity - c.bookings_count
 
         events.append({
             'id': c.id,
@@ -490,6 +557,7 @@ def classes_json(request):
             }
         })
 
+    cache.set(cache_key, events, 60)
     return JsonResponse(events, safe=False)
 
 

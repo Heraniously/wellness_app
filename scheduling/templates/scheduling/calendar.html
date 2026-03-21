@@ -1,18 +1,60 @@
 {% extends 'base.html' %}
 {% block title %}
-Class Calendar
+Book Classes
 {% endblock %}
 {% block content %}
-<div class="container-fluid py-4">
-  <h2 class="fw-bold text-center mb-4" style="color: #6d8b74">
-    Class Schedule
-  </h2>
-  <div id="calendar-loading" class="d-flex justify-content-center align-items-center py-4">
-    <div class="spinner-border text-success" role="status">
-      <span class="visually-hidden">Loading...</span>
-    </div>
+<div class="container-fluid py-3">
+  <div class="btn-group w-100 mb-3">
+    <a href="{% url 'calendar' %}" class="btn btn-sm btn-primary">List</a>
+    <a href="{% url 'calendar_month' %}" class="btn btn-sm btn-outline-secondary">Month</a>
   </div>
-  <div id="calendar" class="d-none"></div>
+
+  {% for date, classes in grouped_classes %}
+    <div class="mb-3">
+      <div class="px-2 py-1 rounded-3 mb-2" style="background-color: var(--zen-sage); color: #fff;">
+        <strong>{{ date|date:"l, M d" }}</strong>
+      </div>
+      {% for cls in classes %}
+        <div
+          class="card mb-2 class-card"
+          style="background-color: {{ cls.color }} !important; color: #fff !important; opacity: {% if cls.user_has_booked %}0.4{% else %}0.85{% endif %}; cursor: pointer;"
+          data-title="{{ cls.title|escape }}"
+          data-instructor="{{ cls.instructor.get_full_name|default:cls.instructor.username|escape }}"
+          data-time="{{ cls.start_time|date:'H:i' }} - {{ cls.end_time|date:'H:i' }}, {{ cls.start_time|date:'l, d M' }}"
+          data-description="{{ cls.description|escape }}"
+          data-spots="{% if cls.is_full %}Full{% else %}{{ cls.spots_left }} spots available{% endif %}"
+          data-is-full="{% if cls.is_full %}true{% else %}false{% endif %}"
+          data-class-id="{{ cls.id }}"
+          data-color="{{ cls.color }}"
+          data-user-has-booked="{% if cls.user_has_booked %}true{% else %}false{% endif %}"
+        >
+          <div class="card-body py-2">
+            <div class="d-flex justify-content-between align-items-start">
+              <div>
+                <div class="fw-bold">{{ cls.title }}</div>
+                <div class="small">{{ cls.start_time|date:"H:i" }} - {{ cls.end_time|date:"H:i" }}</div>
+                <div class="small">{{ cls.instructor.get_full_name|default:cls.instructor.username }}</div>
+                {% if cls.user_has_booked %}
+                  <div class="small mt-1">Already booked ✅</div>
+                {% endif %}
+              </div>
+              <div class="small">
+                {% if cls.is_full %}
+                  Full
+                {% else %}
+                  {{ cls.spots_left }} left
+                {% endif %}
+              </div>
+            </div>
+          </div>
+        </div>
+      {% empty %}
+        <div class="text-muted small">No classes on this day.</div>
+      {% endfor %}
+    </div>
+  {% empty %}
+    <p class="text-muted">No upcoming classes scheduled.</p>
+  {% endfor %}
 </div>
 
 <!-- Class Detail Modal -->
@@ -24,15 +66,11 @@ Class Calendar
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
       <div class="modal-body">
-        <p>
-          <strong>👤 Instructor:</strong> <span id="modalInstructor"></span>
-        </p>
-        <p><strong>🕐 Time:</strong> <span id="modalTime"></span></p>
-        <p>
-          <strong>📝 Description:</strong> <span id="modalDescription"></span>
-        </p>
-        <p><strong>🍃 Cost:</strong> 1 leaf</p>
-        <p><strong>🪑 Spots left:</strong> <span id="modalSpots"></span></p>
+        <p><strong>Instructor:</strong> <span id="modalInstructor"></span></p>
+        <p><strong>Time:</strong> <span id="modalTime"></span></p>
+        <p><strong>Description:</strong> <span id="modalDescription"></span></p>
+        <p><strong>Cost:</strong> 1 leaf</p>
+        <p><strong>Spots left:</strong> <span id="modalSpots"></span></p>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
@@ -48,100 +86,31 @@ Class Calendar
     </div>
   </div>
 </div>
-{% endblock %} {% block scripts %}
-<!-- FullCalendar modules -->
-<link href="https://cdn.jsdelivr.net/npm/@fullcalendar/core@6.1.10/index.global.min.css" rel="stylesheet" />
-<script src="https://cdn.jsdelivr.net/npm/@fullcalendar/core@6.1.10/index.global.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@fullcalendar/daygrid@6.1.10/index.global.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@fullcalendar/list@6.1.10/index.global.min.js"></script>
+{% endblock %}
 
+{% block scripts %}
 <script>
   document.addEventListener("DOMContentLoaded", function () {
-    const calendarEl = document.getElementById("calendar");
-    const loadingEl = document.getElementById("calendar-loading");
+    const cards = document.querySelectorAll(".class-card");
+    const modalEl = document.getElementById("classModal");
+    const modal = new bootstrap.Modal(modalEl);
 
-    const calendar = new FullCalendar.Calendar(calendarEl, {
-      initialView: 'listMonth',
-      firstDay: 1,
-      headerToolbar: {
-        left: 'prev,next today',
-        center: 'title',
-        right: 'listMonth,dayGridMonth'
-      },
-      height: 'auto',
-      events: '/api/classes/',
-
-      eventContent: function (arg) {
-        const props = arg.event.extendedProps;
-        const color = arg.event.backgroundColor;
-        const opacity = props.user_has_booked ? 0.4 : 0.85;
-        // Common inner content for both views (without time for list view, since FC shows it)
-        const inner = `
-          <div style="
-            font-size: 0.8rem;
-            line-height: 1.4;
-            white-space: normal;
-            word-wrap: break-word;
-          ">
-            ${arg.event.title}<br>
-            <small style="opacity: 0.85;">${props.instructor}</small><br>
-            ${props.user_has_booked ? '<span style="font-size:0.7rem; color:#d1ffe0;">Already booked ✅</span>' : ''}
-          </div>`;
-
-        // List view: use inner directly, letting FullCalendar handle the time/row styling
-        if (arg.view.type === 'listMonth') {
-          return { html: inner };
-        }
-
-        // Day grid view: include time + pill-style card with zen colors
-        const time = arg.event.start.toLocaleTimeString('en-GB', {
-          hour: '2-digit',
-          minute: '2-digit',
-          hour12: true
-        });
-
-        return {
-          html: `<div style="
-              padding: 3px 5px;
-              font-size: 0.75rem;
-              cursor: pointer;
-            background-color: ${color};
-              border-radius: 4px;
-              color: white;
-              width: 100%;
-              opacity: ${opacity};
-            ">
-              <strong>${time}</strong><br>
-              ${arg.event.title}<br>
-              <small style="opacity: 0.85;">${props.instructor}</small>
-            </div>`
-        };
-      },
-
-      eventClick: function (info) {
-        const props = info.event.extendedProps;
-        const start = info.event.start;
-        const end = info.event.end;
-
-        const timeStr =
-          start.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" }) +
-          " - " +
-          end.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" }) +
-          ", " +
-          start.toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" });
-
-        document.getElementById("modalTitle").textContent = info.event.title;
-        document.getElementById("modalHeader").style.backgroundColor = info.event.backgroundColor;
-        document.getElementById("modalHeader").style.color = "white";
-        document.getElementById("modalInstructor").textContent = props.instructor;
-        document.getElementById("modalTime").textContent = timeStr;
-        document.getElementById("modalDescription").textContent = props.description;
-        document.getElementById("modalSpots").textContent = props.is_full ? "❌ Full" : props.spots_left + " spots available";
-
+    cards.forEach((card) => {
+      card.addEventListener("click", function () {
+        const isFull = card.dataset.isFull === "true";
+        const userHasBooked = card.dataset.userHasBooked === "true";
         const bookBtn = document.getElementById("modalBookBtn");
         const alreadyBooked = document.getElementById("modalAlreadyBooked");
 
-        if (props.user_has_booked) {
+        document.getElementById("modalTitle").textContent = card.dataset.title;
+        document.getElementById("modalHeader").style.backgroundColor = card.dataset.color;
+        document.getElementById("modalHeader").style.color = "white";
+        document.getElementById("modalInstructor").textContent = card.dataset.instructor;
+        document.getElementById("modalTime").textContent = card.dataset.time;
+        document.getElementById("modalDescription").textContent = card.dataset.description;
+        document.getElementById("modalSpots").textContent = card.dataset.spots;
+
+        if (userHasBooked) {
           bookBtn.classList.add("d-none");
           alreadyBooked.classList.remove("d-none");
         } else {
@@ -149,45 +118,18 @@ Class Calendar
           alreadyBooked.classList.add("d-none");
         }
 
-        if (props.is_full) {
+        if (isFull) {
           bookBtn.textContent = "Class Full";
           bookBtn.classList.add("disabled");
         } else {
           bookBtn.textContent = "Book This Class";
           bookBtn.classList.remove("disabled");
-          bookBtn.href = "/finalize-booking/" + props.class_id + "/";
+          bookBtn.href = "/finalize-booking/" + card.dataset.classId + "/";
         }
 
-        new bootstrap.Modal(document.getElementById("classModal")).show();
-      },
-
-      eventDidMount: function (info) {
-        const props = info.event.extendedProps;
-        const spots = props.spots_left;
-        // Tooltip for all views
-        info.el.title = spots <= 0 ? "Full" : spots + " spots left";
-
-        // List view row styling: use teacher color as background, dim if booked
-        if (info.view.type === 'listMonth') {
-          const bg = info.event.backgroundColor;
-          const dimOpacity = props.user_has_booked ? 0.4 : 1;
-          const cells = info.el.querySelectorAll('td');
-          cells.forEach((cell) => {
-            cell.style.backgroundColor = bg;
-            cell.style.opacity = dimOpacity;
-            cell.style.color = 'white';
-          });
-        }
-      },
+        modal.show();
+      });
     });
-
-    calendar.render();
-
-    // Hide spinner and show calendar once rendered
-    if (loadingEl) {
-      loadingEl.classList.add('d-none');
-    }
-    calendarEl.classList.remove('d-none');
   });
 </script>
 {% endblock %}
